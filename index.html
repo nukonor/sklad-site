@@ -7,11 +7,13 @@
     
     <link rel="icon" type="image/png" href="https://i.ibb.co/Lz8ky3YJ/file-00000000ff1471f4b6d9f9d2c686ef67.png">
     <link rel="apple-touch-icon" href="https://i.ibb.co/Lz8ky3YJ/file-00000000ff1471f4b6d9f9d2c686ef67.png">
+    
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Склад v118">
     <meta name="theme-color" content="#5c67f2">
+
     <link rel="manifest" href="data:application/manifest+json,{'name':'Склад v118','short_name':'Склад','start_url':'.','display':'standalone','background_color':'#f4f7f9','theme_color':'#5c67f2','icons':[{'src':'https://i.ibb.co/Lz8ky3YJ/file-00000000ff1471f4b6d9f9d2c686ef67.png','sizes':'512x512','type':'image/png'}]}">
 
     <style>
@@ -44,7 +46,7 @@
     </style>
 </head>
 <body id="app">
-    <div id="userStatus" class="user-badge">Загрузка...</div>
+    <div id="userStatus" class="user-badge">Вход не выполнен</div>
     <div class="menu">
         <button class="btn-cat active" onclick="setCat('Пакеты', this)">Пакеты</button>
         <button class="btn-cat" onclick="setCat('Пленка', this)">Пленка</button>
@@ -75,7 +77,7 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
-        let currentCat = 'Пакеты', isAdmin = false, currentUserEmail = '', activeId = null, originalTime = null, cachedData = {};
+        let currentCat = 'Пакеты', isAdmin = false, currentUserEmail = 'guest', activeId = null, originalTime = null, cachedData = {};
         const products = ["Арнаутка", "Артек", "Ячка", "Пшеничка", "Кукуруза", "Горох", "Манка", "Хлопья", "Гречка", "Рис дл", "Рис кр", "Рис пр", "Перловка", "Пшоно", "Кук.мука", "Басмати г", "Басмати к", "Кутя", "Кус кус", "Нут", "Чечевица", "Булгур"];
         const sizes = ["300×400", "370×500", "400×500", "420×550"];
 
@@ -88,7 +90,7 @@
                 statusDiv.innerText = "Пользователь: " + user.email;
             } else {
                 isAdmin = false;
-                currentUserEmail = '';
+                currentUserEmail = 'guest';
                 document.body.classList.remove('auth-ok');
                 statusDiv.innerText = "Вход не выполнен";
             }
@@ -148,7 +150,9 @@
             let h = '';
             const sorted = Object.entries(data).map(([id, v]) => ({...v, id})).filter(v => v.size === size).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 50);
             sorted.forEach(v => {
-                const authorStr = v.author || 'система', tagClass = v.linkedId ? 'tag-auto' : 'tag-man', tagName = v.linkedId ? 'авто' : authorStr.split('@')[0];
+                const authorStr = v.author || 'система';
+                const tagClass = v.linkedId ? 'tag-auto' : 'tag-man';
+                const tagName = v.linkedId ? 'авто' : authorStr.split('@')[0];
                 h += `<div class="row" style="font-size:13px"><div><small style="color:var(--sub)">${formatSafeDate(v.date)}</small><br><span class="info-tag ${tagClass}">${tagName}</span> <span class="note-text">${v.note || ''}</span></div><div style="text-align:right"><b style="color:${v.amount>0?'var(--success)':'var(--danger)'}">${v.amount>0?'+':''}${v.amount.toFixed(1)}</b>${isAdmin ? `<br><span style="color:var(--danger);font-size:10px;font-weight:bold" onclick="deleteEntry('${cat}','${v.id}')">УДАЛИТЬ</span>` : ''}</div></div>`;
             });
             document.getElementById('modalBody').innerHTML = h || 'Пусто';
@@ -170,7 +174,8 @@
             let list = [];
             ['Пакеты', 'Пленка', 'Скотч'].forEach(cat => { if(all[cat]) Object.entries(all[cat]).forEach(([id, v]) => list.push({...v, cat, id})); });
             list.sort((a,b) => b.date.localeCompare(a.date)).slice(0, 50).forEach(v => {
-                const tagClass = v.linkedId ? 'tag-auto' : 'tag-man', authorShort = (v.author || 'система').split('@')[0];
+                const tagClass = v.linkedId ? 'tag-auto' : 'tag-man';
+                const authorShort = (v.author || 'система').split('@')[0];
                 h += `<div class="row" style="font-size:13px"><div><small>${formatSafeDate(v.date)} | ${v.cat}</small><br><b>${v.size}</b><br><span class="info-tag ${tagClass}">${v.linkedId?'авто':authorShort}</span> <span class="note-text">${v.note||''}</span></div><b style="color:${v.amount>0?'var(--success)':'var(--danger)'}">${v.amount>0?'+':''}${v.amount.toFixed(1)}</b></div>`;
             });
             document.getElementById('content').innerHTML = h + '</div>';
@@ -180,17 +185,23 @@
             const title = document.getElementById('modalTitle'), body = document.getElementById('modalBody');
             if(type === 'auth') { 
                 title.innerText = 'Вход в систему'; 
-                body.innerHTML = `<input type="email" id="loginEmail" placeholder="Email" value="nukonor@gmail.com"><input type="password" id="pass" placeholder="Пароль"><button class="btn-main" onclick="login()">Войти</button>${isAdmin ? '<button class="btn-main" style="background:var(--danger)" onclick="logout()">ВЫЙТИ</button>' : ''}`; 
+                body.innerHTML = `
+                    <input type="email" id="loginEmail" placeholder="Email" value="nukonor@gmail.com">
+                    <input type="password" id="pass" placeholder="Пароль">
+                    <button class="btn-main" onclick="login()">Войти</button>
+                    ${isAdmin ? '<button class="btn-main" style="background:var(--danger)" onclick="logout()">ВЫЙТИ</button>' : ''}`; 
             }
             else if(type === 'edit') { title.innerText = name; body.innerHTML = `<p>Новый остаток:</p><input type="number" id="newQty" value="${val.toFixed(1)}"><button class="btn-main" onclick="saveEdit('${name}', ${val})">Обновить</button>`; }
             else if(type === 'add') { 
                 title.innerText = 'Приход: ' + currentCat; 
-                body.innerHTML = `<label style="font-size:12px;color:var(--sub)">Дата:</label><input type="date" id="addDate" value="${new Date().toISOString().split('T')[0]}"><select id="selSize">${(currentCat==='Пленка'?products:(currentCat==='Пакеты'?sizes:['Скотч 360г'])).map(s=>`<option>${s}</option>`).join('')}</select><input type="number" id="amt" placeholder="Количество"><button class="btn-main" onclick="saveAdd()">Добавить</button>`; 
+                body.innerHTML = `
+                    <label style="font-size:12px;color:var(--sub)">Дата прихода:</label>
+                    <input type="date" id="addDate" value="${new Date().toISOString().split('T')[0]}">
+                    <select id="selSize">${(currentCat==='Пленка'?products:(currentCat==='Пакеты'?sizes:['Скотч 360г'])).map(s=>`<option>${s}</option>`).join('')}</select>
+                    <input type="number" id="amt" placeholder="Количество">
+                    <button class="btn-main" onclick="saveAdd()">Добавить</button>`; 
             }
-            else if(type === 'fasovka') { 
-                title.innerText = activeId ? 'Редактировать фасовку' : 'Новая фасовка'; 
-                body.innerHTML = `<input type="date" id="fDate" value="${new Date().toISOString().split('T')[0]}"><select id="fName">${products.map(p=>`<option>${p}</option>`).join('')}</select><select id="fSize">${sizes.map(s=>`<option>${s}</option>`).join('')}</select><input type="number" id="fPrihod" placeholder="Сырье кг"><input type="number" id="fVyhod" placeholder="Выход шт"><input type="number" id="fVzial" placeholder="Взял пленки кг"><input type="number" id="fOstatok" placeholder="Остаток кг"><button class="btn-main" id="btnFasSave" onclick="saveFasovka()">Сохранить</button>${activeId ? '<button class="btn-main" id="btnFasDel" style="background:var(--danger)" onclick="deleteFasovka()">УДАЛИТЬ ОТЧЕТ</button>' : ''}`; 
-            }
+            else if(type === 'fasovka') { title.innerText = 'Фасовка'; body.innerHTML = `<input type="date" id="fDate" value="${new Date().toISOString().split('T')[0]}"><select id="fName">${products.map(p=>`<option>${p}</option>`).join('')}</select><select id="fSize">${sizes.map(s=>`<option>${s}</option>`).join('')}</select><input type="number" id="fPrihod" placeholder="Сырье кг"><input type="number" id="fVyhod" placeholder="Выход шт"><input type="number" id="fVzial" placeholder="Взял пленки кг"><input type="number" id="fOstatok" placeholder="Остаток кг"><button class="btn-main" id="btnFasSave" onclick="saveFasovka()">Сохранить</button><button class="btn-main" id="btnFasDel" style="background:var(--danger);display:none" onclick="deleteFasovka()">Удалить отчет</button>`; }
             document.getElementById('modal').style.display = 'flex';
         }
 
@@ -211,24 +222,37 @@
             } catch (err) { alert("Ошибка: " + err.message); } finally { btn.disabled = false; btn.innerText = "Сохранить"; }
         }
 
-        function editFasovka(id) {
-            if(!isAdmin) return;
-            activeId = id; const v = cachedData.Фасовка[id];
-            originalTime = v.date.split('T')[1] || "12:00:00Z";
-            openModal('fasovka');
-            setTimeout(() => {
-                document.getElementById('fDate').value = v.date.split('T')[0]; document.getElementById('fName').value = v.name;
-                document.getElementById('fSize').value = v.size; document.getElementById('fPrihod').value = v.prihod;
-                document.getElementById('fVyhod').value = v.vyhod; document.getElementById('fVzial').value = v.vzial;
-                document.getElementById('fOstatok').value = v.ostatok;
-            }, 50);
+        async function saveEdit(name, old) { 
+            const nv = parseFloat(document.getElementById('newQty').value); 
+            await db.ref(`inventory/${currentCat}`).push({ 
+                size: name, 
+                amount: nv - old, 
+                date: new Date().toISOString(), 
+                note: 'Коррекция', 
+                author: currentUserEmail 
+            }); 
+            closeModal(); 
+        }
+        
+        async function saveAdd() { 
+            const s = document.getElementById('selSize').value, a = parseFloat(document.getElementById('amt').value), d = document.getElementById('addDate').value;
+            if(a) {
+                await db.ref(`inventory/${currentCat}`).push({ size: s, amount: a, date: d + "T12:00:00Z", note: 'Приход', author: currentUserEmail }); 
+                closeModal(); 
+            }
         }
 
-        async function saveEdit(name, old) { const nv = parseFloat(document.getElementById('newQty').value); await db.ref(`inventory/${currentCat}`).push({ size: name, amount: nv - old, date: new Date().toISOString(), note: 'Коррекция', author: currentUserEmail }); closeModal(); }
-        async function saveAdd() { const s = document.getElementById('selSize').value, a = parseFloat(document.getElementById('amt').value), d = document.getElementById('addDate').value; if(a) { await db.ref(`inventory/${currentCat}`).push({ size: s, amount: a, date: d + "T12:00:00Z", note: 'Приход', author: currentUserEmail }); closeModal(); } }
-        async function deleteFasovka() { if(confirm('Удалить отчет и вернуть остатки?')) { for(let c of ['Пакеты', 'Пленка', 'Скотч']) { const s = await db.ref('inventory/'+c).once('value'); s.forEach(ch => { if(ch.val().linkedId === activeId) ch.ref.remove(); }); } await db.ref('inventory/Фасовка/'+activeId).remove(); closeModal(); } }
+        async function deleteFasovka() { if(confirm('Удалить отчет?')) { for(let c of ['Пакеты', 'Пленка', 'Скотч']) { const s = await db.ref('inventory/'+c).once('value'); s.forEach(ch => { if(ch.val().linkedId === activeId) ch.ref.remove(); }); } await db.ref('inventory/Фасовка/'+activeId).remove(); closeModal(); } }
         async function deleteEntry(cat, id) { if(confirm('Удалить запись?')) { await db.ref(`inventory/${cat}/${id}`).remove(); closeModal(); } }
-        async function login() { const email = document.getElementById('loginEmail').value, pass = document.getElementById('pass').value; try { await auth.signInWithEmailAndPassword(email, pass); closeModal(); } catch (e) { alert("Ошибка: " + e.message); } }
+        
+        async function login() { 
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('pass').value;
+            try {
+                await auth.signInWithEmailAndPassword(email, pass);
+                closeModal(); 
+            } catch (e) { alert("Ошибка: " + e.message); }
+        }
         function logout() { auth.signOut(); closeModal(); }
         function closeModal() { document.getElementById('modal').style.display = 'none'; activeId = null; }
         window.onload = () => setCat('Пакеты');
