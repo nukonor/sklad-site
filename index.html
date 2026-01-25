@@ -122,8 +122,16 @@ input:focus, select:focus { border-color: var(--p); background: #f8fafc; }
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script>
+// ============================================
+// НАСТРОЙКИ И ПАРОЛЬ
+// ============================================
+const APP_PIN = "1111"; // <--- МЕНЯЙ ПАРОЛЬ ТУТ
 const cfg={apiKey:"AIzaSyAya0CSXtG3Fh4GzJ2bV7AJ0BaYEcTXK9Q",databaseURL:"https://myproductionapp-bd872-default-rtdb.firebaseio.com",projectId:"myproductionapp-bd872"};
-if(!firebase.apps.length)firebase.initializeApp(cfg);const db=firebase.database().ref('production'),auth=firebase.auth();let cur='Home',data={},aId=null,archSub='',corrMode=false,isLogged=false,incItems=[];
+
+// ИНИЦИАЛИЗАЦИЯ
+if(!firebase.apps.length)firebase.initializeApp(cfg);
+const db=firebase.database().ref('production'),auth=firebase.auth();
+let cur='Home',data={},aId=null,archSub='',corrMode=false,isLogged=false,incItems=[];
 const bP=["Арнаутка","Артек","Басмати г","Басмати к","Булгур","Горох","Гречка","Кукуруза","Кук.мука","Кус кус","Кутя","Манка","Нут","Перловка","Пшеничка","Пшоно","Рис дл","Рис кр","Рис пр","Хлопья","Чечевица","Ячка"],szs=["300×400","370×500","400×500","420×550"],mths=["ЯНВ","ФЕВ","МАРТ","АПР","МАЙ","ИЮНЬ","ИЮЛЬ","АВГ","СЕНТ","ОКТ","НОЯБ","ДЕК"];
 const fd=i=>{if(!i)return'';const parts=i.split('T')[0].split('-');return `${parts[2]}.${parts[1]}.${parts[0]} ${parts[1]}:${parts[2]}`};const fd2=i=>{if(!i)return'';const parts=i.split('T')[0].split('-');return `${parts[2]}.${parts[1]}.${parts[0]}`};
 const closeModal=()=>{document.getElementById('mdl').style.display='none';aId=null;incItems=[];};const toggleF=id=>{const e=document.getElementById(id);e.style.display=e.style.display==='block'?'none':'block'};
@@ -145,15 +153,19 @@ const gS=()=>{const s=new Set();['ArchIncoming','Пакеты','Пленка','�
 const gCl=()=>{const s=new Set();if(data.ArchInvoices)Object.values(data.ArchInvoices).forEach(v=>s.add(v.client));return Array.from(s).filter(x=>x).sort();};
 const gPack=(cat)=>{const s=new Set();if(cat==='Пакеты')szs.forEach(x=>s.add(x));if(cat==='Скотч')s.add('Скотч 360 грамм');if(cat==='Пленка')bP.forEach(x=>s.add(x));const dbK=cat==='Скотч'?'Скотч 360 грамм':cat;if(data[dbK])Object.values(data[dbK]).forEach(v=>{if(v.name)s.add(v.name)});return Array.from(s).filter(x=>x).sort();};
 
+// ============================================
+// ИСПРАВЛЕННАЯ ФУНКЦИЯ ВХОДА
+// ============================================
 async function tryLogin() {
     const p = document.getElementById('appPass').value;
-    try {
-        await auth.signInWithEmailAndPassword('nukonor@gmail.com', p);
+    if(p === APP_PIN) {
         document.getElementById('lockScreen').classList.add('lock-hidden');
         document.body.classList.add('nav-active');
         isLogged = true;
         renderHome();
-    } catch(e) {
+        // Тихо авторизуемся в базе, чтобы работало
+        try { await auth.signInWithEmailAndPassword('nukonor@gmail.com', '123456'); } catch(e){}
+    } else {
         alert('Неверный пароль');
     }
 }
@@ -436,6 +448,16 @@ async function delRec(cat, id) {
         closeModal();
     }
 }
+
+// ============================================
+// ИСПРАВЛЕНИЕ КНОПОК УДАЛЕНИЯ (ВОТ ОНО)
+// ============================================
+const delFas = id => delRec('Фасовка', id);
+const delKrup = id => delRec('Krup_Report', id);
+const delVibro = id => delRec('Vibro_Report', id);
+const delZSHM = id => delRec('ZSHM_Report', id);
+const delArchRec = (cat, id) => delRec(cat, id);
+
 async function delItemBatch(val, type) {if(!confirm(`ВНИМАНИЕ! Удалить "${val}" изо всех списков и архивов?`)) return;const updates = {};Object.keys(data).forEach(cat => {Object.entries(data[cat]).forEach(([id, v]) => {if (type === 'name' && v.name === val) updates[`/${cat}/${id}`] = null;if (type === 'supplier' && v.supplier === val) updates[`/${cat}/${id}`] = null;if (type === 'client' && v.client === val) updates[`/${cat}/${id}`] = null;});});await db.update(updates);closeModal();alert('Удалено');}
 
 // === NEW INCOMING LOGIC ===
