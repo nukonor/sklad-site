@@ -621,5 +621,42 @@ b.innerHTML=`<div style="background:#f9fafb;padding:8px;border-radius:8px;margin
 else if(t=='log'){rGlobalLog(b);ti.innerText='Журнал действий';}
 document.getElementById('mdl').style.display='flex';}
 async function login(){try{await auth.signInWithEmailAndPassword(document.getElementById('lE').value,document.getElementById('lP').value);closeModal()}catch(e){alert('Ошибка')}}
-auth.onAuthStateChanged(u=>{document.getElementById('uS').innerText=u?u.email.toUpperCase():"ВХОД...";renderHome()});window.onload=renderHome;
+auth.onAuthStateChanged(u=>{document.getElementById('uS').innerText=u?u.email.toUpperCase():"ВХОД...";renderHome()});async function sRawInc(){
+    const btn=document.getElementById('btnS');
+    if(btn)btn.disabled=true;
+    
+    let n = document.getElementById('s_rN').value;
+    if(n==='NEW') n = document.getElementById('i_rN').value;
+    
+    let supp = document.getElementById('s_rSupp').value;
+    if(supp==='NEW') supp = document.getElementById('i_rSupp').value;
+    
+    const a = parseFloat(document.getElementById('rA').value);
+
+    if(!n || !a){
+        if(btn)btn.disabled=false;
+        return alert('Укажите название и вес');
+    }
+
+    const updates = {};
+    const d = new Date().toISOString().split('T')[0] + "T12:00:00Z";
+    const ts = new Date().toISOString();
+    const newKey = db.child('Stock_Semi').push().key;
+
+    // Добавляем на склад полуфабрикатов (или сырья)
+    updates['/Stock_Semi/' + newKey] = {
+        name: n,
+        amount: a,
+        date: d,
+        ts: ts,
+        note: 'Приход сырья: ' + supp
+    };
+
+    await db.update(updates);
+    logAction({type:'INC_RAW', date:d, name:n, amount:a, supplier:supp});
+    
+    closeModal();
+    alert('Сырье принято!');
+}
+        window.onload=renderHome;
 </script></body></html>
