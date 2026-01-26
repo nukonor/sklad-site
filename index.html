@@ -665,7 +665,7 @@ async function sRawInc(){
         name: n, amount: a, date: d, ts: ts, note: 'Приход: ' + supp, supplier: supp
     };
 
-    // 2. В архив (для запоминания поставщика)
+    // 2. В архив
     const archKey = db.child('ArchIncoming').push().key;
     updates['/ArchIncoming/' + archKey] = {
         date: d, ts: ts, supplier: supp, num: 'Сырье', items: [{n: n, w: a}]
@@ -673,8 +673,11 @@ async function sRawInc(){
 
     await db.update(updates);
     
+    // 3. ВОТ ЭТА СТРОЧКА ВЕРНУЛАСЬ (ДЛЯ ЖУРНАЛА):
+    logAction({type:'INC_RAW', date:d, name:n, amount:a, supplier:supp});
+    
     closeModal();
-    alert('Сырье принято, поставщик сохранен!');
+    alert('Принято! (Склад + Архив + Журнал)');
 }
 
 window.onload=renderHome;
