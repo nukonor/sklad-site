@@ -680,24 +680,40 @@ async function sRawInc(){
 
 async function saveCorr(){
     const btn = document.getElementById('btnC');
-    if(btn) btn.disabled = true;
+    
+    // 1. Читаем заголовок (Умный поиск имени)
+    let txt = document.getElementById('c_tit').innerText;
+    let name = '';
+    let cat = '';
 
-    // Считываем заголовок (Категория|Товар)
-    const t = document.getElementById('c_tit').innerText.split('|');
-    if(t.length < 2) {
-         if(btn) btn.disabled = false;
-         return alert('Ошибка: не выбран товар');
+    // Если формат "Категория|Товар" (Новый)
+    if(txt.includes('|')) {
+        let parts = txt.split('|');
+        cat = parts[0];
+        name = parts[1];
+    } 
+    // Если формат "Коррекция: Товар" (Старый, как у тебя сейчас)
+    else if (txt.includes(':')) {
+        name = txt.split(':')[1].trim(); // Берем "Ячмень"
+        
+        // Ищем, в какой категории живет этот товар
+        if(data.WeightStock && Object.values(data.WeightStock).find(x=>x.name===name)) cat = 'WeightStock';
+        else if(data.Stock_Semi && Object.values(data.Stock_Semi).find(x=>x.name===name)) cat = 'Stock_Semi';
+        else if(data.Готовая && Object.values(data.Готовая).find(x=>x.name===name)) cat = 'Готовая';
+        else cat = 'WeightStock'; // Если не нашли, кидаем в сыпучку
+    } 
+    else {
+        return alert('Ошибка: непонятное название товара');
     }
-    const cat = t[0];
-    const name = t[1];
 
     const val = parseFloat(document.getElementById('c_val').value);
     const note = document.getElementById('c_note').value;
 
     if(!val || !note) {
-        if(btn) btn.disabled = false;
         return alert('Укажите вес (+ или -) и причину');
     }
+
+    if(btn) btn.disabled = true;
 
     const d = new Date().toISOString().split('T')[0] + "T12:00:00Z";
     const updates = {};
@@ -716,8 +732,9 @@ async function saveCorr(){
 
     closeModal();
     alert('Остаток исправлен!');
-    renderHome(); // Обновляем экран сразу
+    renderHome();
 }
+
 
 window.onload=renderHome;
 </script></body></html>
