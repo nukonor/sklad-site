@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Склад v396 Full</title>
+<title>Склад v398 Full</title>
 <script>
     window.onerror = function(msg, url, line) {
         alert("ОШИБКА:\n" + msg + "\nСтрока: " + line + "\nПришлите скриншот!");
@@ -151,6 +151,28 @@ window.delRec = async function(cat, id) {
     await db.child(cat).child(id).remove();
     closeModal();
 };
+
+window.delInvoiceFull = async function(cat, id) {
+    if(!confirm('Удалить накладную и отменить связанные движения товара по всем складам?\n\nВнимание: Товар вернется/спишется автоматически.')) return;
+    const updates = {};
+    updates[`/${cat}/${id}`] = null; 
+    const stockCats = ['Stock_DV', 'Stock_Semi', 'Stock_Feed', 'Stock_Raw', 'WeightStock', 'Готовая', 'Пакеты', 'Пленка', 'Скотч 360 грамм', 'Мешки', 'Нитки', 'Этикетка'];
+    stockCats.forEach(sc => {
+        if(data[sc]) {
+            Object.entries(data[sc]).forEach(([key, val]) => {
+                if(val.fLink === id) {
+                    updates[`/${sc}/${key}`] = null; 
+                }
+            });
+        }
+    });
+    try {
+        await db.update(updates);
+    } catch(e) {
+        alert("Ошибка при удалении: " + e);
+    }
+};
+
 window.delFas = (id) => window.delRec('Фасовка', id);
 window.delKrup = (id) => window.delRec('Krup_Report', id);
 window.delVibro = (id) => window.delRec('Vibro_Report', id);
@@ -271,8 +293,84 @@ function rRaw(c){const t={};gP('Stock_Raw').forEach(p=>t[p]=0);if(data.Stock_Raw
 function rGen(c){const d=data[cur]||{},t={},u='кг';Object.values(d).forEach(v=>{let k=v.name;if(k)t[k]=(t[k]||0)+v.amount});let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(k=>{const val=t[k];let alarm=val<0;if(cur==='Пленка'&&val<50)alarm=true;if(cur==='Скотч 360 грамм'&&val<30)alarm=true;if(cur==='Пакеты'&&val<3000)alarm=true;h+=`<div class="item-card ${alarm?'alarm-blink':''}"><div class="item-title">${k}</div><div class="item-qty">${cur==='Скотч 360 грамм'?val.toFixed(1):Math.round(val)} <small style="font-size:10px">${u}</small></div><button class="history-btn" onclick="showH('${cur}','${k}')">📜</button><button class="corr-btn" onclick="openModal('corr','${cur}|${k}')">±</button></div>`;});c.innerHTML=h+'</div>';}
 function rCleanList(c){let h='<div style="font-size:11px;color:#666;margin-bottom:10px">Нажмите на имя для полного удаления:</div>';const mkR = (s,t) => Array.from(s).sort().forEach(n=>{h+=`<div style="padding:10px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center"><b>${n}</b><div><button onclick="renameItem('${n}','${t}')" style="margin-right:10px;border:none;background:none;font-size:16px">✏️</button><button onclick="delItemBatch('${n}','${t}')" style="border:none;background:none;font-size:16px;color:red">🗑️</button></div></div>`});h+='<div class="clean-cat">📦 ТОВАРЫ</div>';mkR(new Set([...gP('WeightStock'),...gP('Stock_DV'),...gP('Stock_Feed'),...gP('Stock_Semi'),...gP('Stock_Raw'),...gP('Готовая')]),'name');h+='<div class="clean-cat">🚛 ПОСТАВЩИКИ</div>';mkR(new Set(gS()),'supplier');h+='<div class="clean-cat">🤝 КЛИЕНТЫ</div>';mkR(new Set(gCl()),'client');c.innerHTML=h;}
 function showH(c,k){const ti=document.getElementById('mT'),b=document.getElementById('mB');ti.innerText=k;const hist=[];if(data[c])Object.entries(data[c]).filter(([id,v])=>v.name===k).forEach(([id,v])=>{let n=v.note||'Запись';if(v.supplier)n='Приход: '+v.supplier;if(v.client)n='Отгрузка: '+v.client;hist.push({d:v.date,ts:v.ts||'',n:n,a:v.amount,id:id});});let h='<table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:10px">';hist.sort((a,b)=>(b.d+b.ts).localeCompare(a.d+a.ts)).forEach(v=>{h+=`<tr style="border-bottom:1px solid #eee"><td style="padding:8px 0;width:60%"><div style="font-weight:600;color:#1e293b">${v.n}</div><div style="font-size:11px;color:#94a3b8">${fd2(v.d)}</div></td><td style="text-align:right;font-weight:800;font-size:14px" class="${v.a>=0?'hist-pos':'hist-neg'}">${c==='Пакеты'?Math.round(v.a):v.a.toFixed(1)}</td><td style="width:30px;text-align:center">${corrMode?`<button onclick="delRec('${c}','${v.id}')" style="border:none;background:none;font-size:16px;color:red">🗑️</button>`:''}</td></tr>`;});h+='</table>';b.innerHTML=h||'Нет записей';document.getElementById('mdl').style.display='flex';}
-function rInvD(c){ const dbK=(archSub==='In'?'ArchIncoming':'ArchInvoices'),d=data[dbK]||{},t={}; Object.entries(d).forEach(([id,v])=>{ if(!v.date) return; const dt=new Date(v.date),y=dt.getFullYear(),m=dt.getMonth(); if(!t[y])t[y]={m:{}}; if(!t[y].m[m])t[y].m[m]=[]; t[y].m[m].push({...v,id}); }); let h=''; Object.keys(t).sort((a,b)=>b-a).forEach(y=>{ h+=`<div class="arch-y-grid"><div class="arch-tile-y" onclick="toggleF('y${y}')">${y}</div></div><div id="y${y}" class="arch-content">`; h+=`<div class="arch-m-grid">`; Object.keys(t[y].m).sort((a,b)=>b-a).forEach(m=>{ h+=`<div class="arch-tile-m" onclick="toggleF('m${y}${m}')">${mths[m]}</div>`; }); h+=`</div>`; Object.keys(t[y].m).sort((a,b)=>b-a).forEach(m=>{ h+=`<div id="m${y}${m}" class="arch-content" style="grid-column:1/-1;">`; t[y].m[m].sort((a,b)=>(b.date+b.ts).localeCompare(a.date+a.ts)).forEach(v=>{ if(dbK==='ArchIncoming'){ h+=`<div class="j-card"><div class="j-head" style="color:var(--s)">ПРИХОД</div><div class="j-sub">${fd2(v.date)} №${v.num||'Б/Н'}</div><div class="j-title">${v.supplier}</div><div class="j-body">`; if(v.items)v.items.forEach(i=>h+=`<div class="j-row"><span class="j-dots">${i.n}</span><span class="j-val">${i.w}кг</span></div>`); else h+=`<div class="j-row"><span class="j-dots">${v.name}</span><span class="j-val">${v.amount}кг</span></div>`; h+=`</div>`; if(corrMode)h+=`<button class="btn-main" style="background:#fee2e2;color:red;margin-top:5px;padding:8px" onclick="event.stopPropagation();delRec('${dbK}','${v.id}')">УДАЛИТЬ</button>`; h+=`</div>`; } else { h+=`<div class="j-card"><div class="j-head">ОТГРУЗКА</div><div class="j-sub">${fd2(v.date)} №${v.num||'Б/Н'}</div><div class="j-title">${v.client}</div><div class="j-body">`; if(v.items)v.items.forEach(i=>h+=drawShipItem(i)); h+=`</div>`; if(corrMode)h+=`<button class="btn-main" style="background:#fee2e2;color:red;margin-top:5px;padding:8px" onclick="event.stopPropagation();delRec('${dbK}','${v.id}')">УДАЛИТЬ</button>`; h+=`</div>`; } }); h+=`</div>`; }); h+=`</div>`; }); c.innerHTML=h||'Пусто'; }
-function rInvC(c){ const dbK=(archSub==='In'?'ArchIncoming':'ArchInvoices'),d=data[dbK]||{},t={}; Object.entries(d).forEach(([id,v])=>{ if(!v.date) return; const dt=new Date(v.date),y=dt.getFullYear(),m=dt.getMonth(); const clName=v.client||v.supplier||'Без имени'; if(!t[y])t[y]={m:{}}; if(!t[y].m[m])t[y].m[m]={cl:{}}; if(!t[y].m[m].cl[clName])t[y].m[m].cl[clName]=[]; t[y].m[m].cl[clName].push({...v,id}); }); let h=''; Object.keys(t).sort((a,b)=>b-a).forEach(y=>{ h+=`<div class="arch-y-grid"><div class="arch-tile-y" onclick="toggleF('cy${y}')">${y}</div></div><div id="cy${y}" class="arch-content">`; h+=`<div class="arch-m-grid">`; Object.keys(t[y].m).sort((a,b)=>b-a).forEach(m=>{ h+=`<div class="arch-tile-m" onclick="toggleF('cm${y}${m}')">${mths[m]}</div>`; }); h+=`</div>`; Object.keys(t[y].m).sort((a,b)=>b-a).forEach(m=>{ h+=`<div id="cm${y}${m}" class="arch-content" style="grid-column:1/-1;">`; h+=`<div class="arch-c-grid">`; Object.keys(t[y].m[m].cl).sort().forEach(cl=>{ h+=`<div class="arch-tile-c" onclick="toggleF('c${y}${m}${cl.replace(/\s/g,'')}')">${cl}<div class="arch-badge">${t[y].m[m].cl[cl].length}</div></div>`; }); h+=`</div>`; Object.keys(t[y].m[m].cl).sort().forEach(cl=>{ h+=`<div id="c${y}${m}${cl.replace(/\s/g,'')}" class="arch-content" style="margin-top:10px">`; t[y].m[m].cl[cl].sort((a,b)=>(b.date+b.ts).localeCompare(a.date+a.ts)).forEach(v=>{ if(dbK==='ArchIncoming'){ h+=`<div class="j-card"><div class="j-head" style="color:var(--s)">ПРИХОД</div><div class="j-sub">${fd2(v.date)} №${v.num||'Б/Н'}</div><div class="j-body">`; if(v.items)v.items.forEach(i=>h+=`<div class="j-row"><span class="j-dots">${i.n}</span><span class="j-val">${i.w}кг</span></div>`); else h+=`<div class="j-row"><span class="j-dots">${v.name}</span><span class="j-val">${v.amount}кг</span></div>`; h+=`</div></div>`; } else { h+=`<div class="j-card"><div class="j-head">ОТГРУЗКА</div><div class="j-sub">${fd2(v.date)} №${v.num||'Б/Н'}</div><div class="j-title">${v.client}</div><div class="j-body">`; if(v.items)v.items.forEach(i=>h+=drawShipItem(i)); h+=`</div></div>`; } }); h+=`</div>`; }); h+=`</div>`; }); h+=`</div>`; }); c.innerHTML=h||'Пусто'; }
+
+function rInvD(c){ 
+    const dbK=(archSub==='In'?'ArchIncoming':'ArchInvoices'),d=data[dbK]||{},t={}; 
+    Object.entries(d).forEach(([id,v])=>{ if(!v.date) return; const dt=new Date(v.date),y=dt.getFullYear(),m=dt.getMonth(); if(!t[y])t[y]={m:{}}; if(!t[y].m[m])t[y].m[m]=[]; t[y].m[m].push({...v,id}); }); 
+    let h=''; 
+    Object.keys(t).sort((a,b)=>b-a).forEach(y=>{ 
+        h+=`<div class="arch-y-grid"><div class="arch-tile-y" onclick="toggleF('y${y}')">${y}</div></div><div id="y${y}" class="arch-content">`; 
+        h+=`<div class="arch-m-grid">`; 
+        Object.keys(t[y].m).sort((a,b)=>b-a).forEach(m=>{ h+=`<div class="arch-tile-m" onclick="toggleF('m${y}${m}')">${mths[m]}</div>`; }); 
+        h+=`</div>`; 
+        Object.keys(t[y].m).sort((a,b)=>b-a).forEach(m=>{ 
+            h+=`<div id="m${y}${m}" class="arch-content" style="grid-column:1/-1;">`; 
+            t[y].m[m].sort((a,b)=>(b.date+b.ts).localeCompare(a.date+a.ts)).forEach(v=>{ 
+                if(dbK==='ArchIncoming'){ 
+                    h+=`<div class="j-card"><div class="j-head" style="color:var(--s)">ПРИХОД</div><div class="j-sub">${fd2(v.date)} №${v.num||'Б/Н'}</div><div class="j-title">${v.supplier}</div><div class="j-body">`; 
+                    if(v.items)v.items.forEach(i=>h+=`<div class="j-row"><span class="j-dots">${i.n}</span><span class="j-val">${i.w}кг</span></div>`); 
+                    else h+=`<div class="j-row"><span class="j-dots">${v.name}</span><span class="j-val">${v.amount}кг</span></div>`; 
+                    h+=`</div>`; 
+                    if(corrMode)h+=`<button class="btn-main" style="background:#fee2e2;color:red;margin-top:5px;padding:8px" onclick="event.stopPropagation();delInvoiceFull('${dbK}','${v.id}')">УДАЛИТЬ И ОТМЕНИТЬ</button>`; 
+                    h+=`</div>`; 
+                } else { 
+                    h+=`<div class="j-card"><div class="j-head">ОТГРУЗКА</div><div class="j-sub">${fd2(v.date)} №${v.num||'Б/Н'}</div><div class="j-title">${v.client}</div><div class="j-body">`; 
+                    if(v.items)v.items.forEach(i=>h+=drawShipItem(i)); 
+                    h+=`</div>`; 
+                    if(corrMode)h+=`<button class="btn-main" style="background:#fee2e2;color:red;margin-top:5px;padding:8px" onclick="event.stopPropagation();delInvoiceFull('${dbK}','${v.id}')">УДАЛИТЬ И ВЕРНУТЬ</button>`; 
+                    h+=`</div>`; 
+                } 
+            }); 
+            h+=`</div>`; 
+        }); 
+        h+=`</div>`; 
+    }); 
+    c.innerHTML=h||'Пусто'; 
+}
+
+function rInvC(c){ 
+    const dbK=(archSub==='In'?'ArchIncoming':'ArchInvoices'),d=data[dbK]||{},t={}; 
+    Object.entries(d).forEach(([id,v])=>{ if(!v.date) return; const dt=new Date(v.date),y=dt.getFullYear(),m=dt.getMonth(); const clName=v.client||v.supplier||'Без имени'; if(!t[y])t[y]={m:{}}; if(!t[y].m[m])t[y].m[m]={cl:{}}; if(!t[y].m[m].cl[clName])t[y].m[m].cl[clName]=[]; t[y].m[m].cl[clName].push({...v,id}); }); 
+    let h=''; 
+    Object.keys(t).sort((a,b)=>b-a).forEach(y=>{ 
+        h+=`<div class="arch-y-grid"><div class="arch-tile-y" onclick="toggleF('cy${y}')">${y}</div></div><div id="cy${y}" class="arch-content">`; 
+        h+=`<div class="arch-m-grid">`; 
+        Object.keys(t[y].m).sort((a,b)=>b-a).forEach(m=>{ h+=`<div class="arch-tile-m" onclick="toggleF('cm${y}${m}')">${mths[m]}</div>`; }); 
+        h+=`</div>`; 
+        Object.keys(t[y].m).sort((a,b)=>b-a).forEach(m=>{ 
+            h+=`<div id="cm${y}${m}" class="arch-content" style="grid-column:1/-1;">`; 
+            
+            Object.keys(t[y].m[m].cl).sort().forEach(cl=>{ 
+                const uniqueId = `c${y}${m}${cl.replace(/\s/g,'')}`;
+                const count = t[y].m[m].cl[cl].length;
+                h+=`<div class="arch-tile-c" style="margin-bottom:2px" onclick="toggleF('${uniqueId}')">${cl}<div class="arch-badge">${count}</div></div>`;
+                h+=`<div id="${uniqueId}" class="arch-content" style="margin-bottom:10px; border-left: 2px solid var(--p); padding-left: 5px;">`;
+                
+                t[y].m[m].cl[cl].sort((a,b)=>(b.date+b.ts).localeCompare(a.date+a.ts)).forEach(v=>{ 
+                    if(dbK==='ArchIncoming'){ 
+                        h+=`<div class="j-card"><div class="j-head" style="color:var(--s)">ПРИХОД</div><div class="j-sub">${fd2(v.date)} №${v.num||'Б/Н'}</div><div class="j-body">`; 
+                        if(v.items)v.items.forEach(i=>h+=`<div class="j-row"><span class="j-dots">${i.n}</span><span class="j-val">${i.w}кг</span></div>`); 
+                        else h+=`<div class="j-row"><span class="j-dots">${v.name}</span><span class="j-val">${v.amount}кг</span></div>`; 
+                        h+=`</div>`;
+                        if(corrMode)h+=`<button class="btn-main" style="background:#fee2e2;color:red;margin-top:5px;padding:8px" onclick="event.stopPropagation();delInvoiceFull('${dbK}','${v.id}')">УДАЛИТЬ И ОТМЕНИТЬ</button>`;
+                        h+=`</div>`; 
+                    } else { 
+                        h+=`<div class="j-card"><div class="j-head">ОТГРУЗКА</div><div class="j-sub">${fd2(v.date)} №${v.num||'Б/Н'}</div><div class="j-title">${v.client}</div><div class="j-body">`; 
+                        if(v.items)v.items.forEach(i=>h+=drawShipItem(i)); 
+                        h+=`</div>`;
+                        if(corrMode)h+=`<button class="btn-main" style="background:#fee2e2;color:red;margin-top:5px;padding:8px" onclick="event.stopPropagation();delInvoiceFull('${dbK}','${v.id}')">УДАЛИТЬ И ВЕРНУТЬ</button>`;
+                        h+=`</div>`; 
+                    } 
+                }); 
+                h+=`</div>`; 
+            }); 
+            
+            h+=`</div>`; 
+        }); 
+        h+=`</div>`; 
+    }); 
+    c.innerHTML=h||'Пусто'; 
+}
 
 function makeSelect(id, cat, ph, sourceOverride, newLabel) { let opts = `<option value="">${ph}...</option>`; let list = []; if(sourceOverride) list = sourceOverride; else { if(cat === 'Stock_DV') { const rawSet = new Set(); gP(cat).forEach(full => rawSet.add(full.split(' [')[0])); list = Array.from(rawSet).sort(); } else { list = gP(cat); } } list.forEach(n => opts += `<option value="${n}">${n}</option>`); opts += `<option value="NEW" style="font-weight:bold;color:var(--p)">${newLabel || '+ НОВЫЙ ВИД'}</option>`; return `<select id="s_${id}" onchange="toggleInput('${id}')" style="width:100%">${opts}</select><input type="text" id="i_${id}" class="new-input" placeholder="Введите название" style="display:none;width:100%">`; }
 function makeSmart(id, list, ph) { let opts = `<option value="">${ph}</option>`; if(list) list.forEach(x => opts += `<option value="${x}">${x}</option>`); opts += `<option value="NEW_ENTRY" style="font-weight:900;color:blue">(+) ВВЕСТИ...</option>`; return `<div class="smart-wrap"> <select id="s_${id}" class="smart-sel" onchange="checkSmart('${id}')">${opts}</select> <input type="text" id="i_${id}" class="smart-inp" placeholder="${ph}"> </div>`; }
