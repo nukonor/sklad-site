@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Склад v506 "Эстет"</title>
+<title>Склад v508 "Спецсвязь"</title>
 <script>
     window.onerror = function(msg, url, line) {
         alert("ОШИБКА:\n" + msg + "\nСтрока: " + line + "\nПришлите скриншот!");
@@ -102,6 +102,17 @@ input:focus, select:focus { border-color: var(--p); background: #f8fafc; }
 .z-col-h { display:grid; grid-template-columns: 32% 16% 16% 16% 8%; gap:4px; text-align:center; font-size:9px; color:#64748b; font-weight:700; margin-bottom:4px; }
 .del-rep-btn { position: absolute; top: 5px; right: 5px; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 99; opacity: 0.3; transition: 0.2s; }
 .del-rep-btn:active { opacity: 1; transform: scale(1.1); }
+
+/* --- СТИЛИ ДЛЯ ПЕЧАТИ --- */
+@media print {
+    body { background: white; padding: 0; color: black; }
+    #lockScreen, #act, .bottom-nav, .dash-item, .btn-main, .logo-box, #corrCtls, .history-btn, .corr-btn, #navM, #navB, #print-ctrl { display: none !important; }
+    #cnt { display: block !important; position: static; width: 100%; margin: 0; padding: 0; }
+    .z-head { background: none !important; border: none !important; color: #000 !important; font-size: 16px !important; text-align: left !important; padding-left: 0 !important; margin-top: 20px !important; border-bottom: 2px solid #000 !important; }
+    .item-card { box-shadow: none !important; border: none !important; border-bottom: 1px dotted #ccc !important; padding: 5px 0 !important; margin: 0 !important; color: #000 !important; }
+    .item-grid { display: block !important; }
+    .item-card span { color: #000 !important; }
+}
 
 @keyframes blink { from { opacity: 1; } to { opacity: 0.7; } }
 </style>
@@ -205,7 +216,6 @@ function renderHome(){
     document.body.classList.remove('nav-active');
     document.getElementById('act').innerHTML='';
     const logo=`<div class="logo-box"><img src="https://i.ibb.co/Gv0xDqnt/file-00000000ff1471f4b6d9f9d2c686ef67.png" class="logo-img"></div>`;
-    // КНОПКА СВОДНЫЙ ОТЧЕТ ТЕПЕРЬ ОБЫЧНАЯ
     document.getElementById('cnt').innerHTML=`${logo}<div class="dash-grid">
         <div class="dash-item" onclick="setCat('StockRoot')"><span>📦</span>Склад</div>
         <div class="dash-item" onclick="setCat('ProdSub')"><span>⚙️</span>Производство</div>
@@ -303,7 +313,7 @@ function rConsolidated(c) {
         return h + `</div>`;
     };
 
-    let h = '<div style="padding-bottom:20px">';
+    let h = '<div id="print-area" style="padding-bottom:20px">';
     
     // 1. ФАСОВКА (Только Готовая) - ТЕПЕРЬ В ШТУКАХ
     let fas = sumCat(['Готовая']);
@@ -349,7 +359,79 @@ function rConsolidated(c) {
     h += drawSection('🏷️ ЭТИКЕТКА', label, 'шт', '#f1f5f9');
 
     h += '</div>';
+    
+    // БЛОК УПРАВЛЕНИЯ ОТПРАВКОЙ (ДЛЯ WhatsApp)
+    let bossNum = localStorage.getItem('bossNumber') || '';
+    
+    h += `<div id="print-ctrl" style="margin-top:20px;border-top:2px dashed #cbd5e1;padding-top:15px">
+        <div style="font-size:10px;font-weight:700;color:#64748b;margin-bottom:5px">НАСТРОЙКА ОТПРАВКИ</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:5px;margin-bottom:15px">
+            <input type="tel" id="bossNum" placeholder="Номер (7900...)" value="${bossNum}" style="margin:0">
+            <button class="btn-main" onclick="saveNumber()" style="margin:0;padding:5px;font-size:10px;background:#94a3b8">💾 ЗАПОМНИТЬ</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+            <button class="btn-main" onclick="printRep()" style="background:#334155;font-size:10px">🖨️ ПЕЧАТЬ</button>
+            <button class="btn-main" onclick="sendWA()" style="background:#22c55e;font-size:10px">WHATSAPP (Директ)</button>
+            <button class="btn-main" onclick="shareRep()" style="background:#2563eb;font-size:10px">ОБЩИЕ (Viber/TG)</button>
+        </div>
+        <div style="font-size:9px;color:#94a3b8;margin-top:5px;text-align:center">Для Viber/TG выберите контакт вручную</div>
+    </div>`;
+
     c.innerHTML = h || '<div style="text-align:center;padding:20px;color:#999">Склады пусты</div>';
+}
+
+function saveNumber() {
+    let num = document.getElementById('bossNum').value.replace(/[^0-9]/g, '');
+    localStorage.setItem('bossNumber', num);
+    alert('Номер сохранен: ' + num);
+}
+
+function printRep() { window.print(); }
+
+function getReportText() {
+    let txt = "📊 СВОДНЫЙ ОТЧЕТ [" + new Date().toLocaleDateString() + "]\n\n";
+    
+    const getTxt = (cat, title, unit) => {
+        let d = {};
+        if(data[cat]) Object.values(data[cat]).forEach(v => d[v.name] = (d[v.name] || 0) + v.amount);
+        let items = Object.keys(d).filter(k => Math.abs(d[k]) > 0.1).sort();
+        if(items.length) {
+            txt += title + ":\n";
+            items.forEach(k => txt += `- ${k}: ${Math.round(d[k])} ${unit}\n`);
+            txt += "\n";
+        }
+    };
+
+    getTxt('Готовая', '📦 ФАСОВКА', 'шт');
+    getTxt('Stock_DV', '🏭 СКЛАД ДВ', 'кг');
+    getTxt('WeightStock', '⚖️ ПОКУПНАЯ', 'кг');
+    getTxt('Stock_Raw', '🚜 СЫРЬЁ', 'кг');
+    getTxt('Stock_Semi', '⚙️ П/Ф', 'кг');
+    getTxt('Stock_Feed', '🍂 КОРМА', 'кг');
+    getTxt('Пакеты', '🥡 ПАКЕТЫ', 'шт');
+    getTxt('Пленка', '🎞️ ПЛЕНКА', 'кг');
+    getTxt('Скотч 360 грамм', '🧴 СКОТЧ', 'шт');
+    getTxt('Мешки', '💰 МЕШКИ', 'шт');
+    getTxt('Нитки', '🧵 НИТКИ', 'шт');
+    getTxt('Этикетка', '🏷️ ЭТИКЕТКА', 'шт');
+    
+    return txt;
+}
+
+function sendWA() {
+    let num = localStorage.getItem('bossNumber');
+    if(!num) return alert('Сначала введите и запомните номер!');
+    let txt = encodeURIComponent(getReportText());
+    window.open(`https://wa.me/${num}?text=${txt}`, '_blank');
+}
+
+function shareRep() {
+    let txt = getReportText();
+    if (navigator.share) {
+        navigator.share({ title: 'Отчет', text: txt }).catch(console.error);
+    } else {
+        navigator.clipboard.writeText(txt).then(() => alert('Отчет скопирован! Вставьте в мессенджер.')).catch(e => alert('Ошибка копирования'));
+    }
 }
 
 function renderByTiles(c, rawD, type) {
