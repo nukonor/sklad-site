@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Склад v535 "Остатки"</title>
+<title>Склад v550 "Отчет"</title>
 <script>
     window.onerror = function(msg, url, line) {
         alert("ОШИБКА:\n" + msg + "\nСтрока: " + line + "\nПришлите скриншот!");
@@ -107,6 +107,7 @@ input:focus, select:focus { border-color: var(--p); background: #f8fafc; }
 
 /* FASOVKA ROW */
 .fas-row { display: grid; grid-template-columns: 25% 45% 20% 10%; gap: 3px; align-items: center; margin-bottom: 5px; background: #f8fafc; padding: 3px; border-radius: 6px; border:1px solid #e2e8f0; }
+.fas-out-row { display: grid; grid-template-columns: 45% 25% 20% 10%; gap: 3px; align-items: center; margin-bottom: 5px; background: #eef2ff; padding: 3px; border-radius: 6px; border:1px solid #c7d2fe; }
 
 @media print {
     body { background: white; padding: 0; }
@@ -377,19 +378,58 @@ function renderByTiles(c, rawD, type) {
              h+=`<div id="m${y}${m}${type}" class="arch-content" style="grid-column:1/-1;">`;
              gr[y][m].sort((a,b)=>(b.date+b.ts).localeCompare(a.date+a.ts)).forEach(v => {
                 if(type==='FAS') {
-                    // Рендер фасовки с поддержкой мульти-сырья
-                    h+=`<div class="card"><button class="del-rep-btn" onclick="event.stopPropagation();delFasFull('${v.id}')">🗑️</button><b>${v.name.toUpperCase()}</b> [${fd2(v.date)}]`;
-                    h+=`<hr style="opacity:0.2;margin:5px 0">`;
+                    // НОВЫЙ ФОРМАТ ОТЧЕТА (КАК В ЗАДАНИИ)
+                    let nameTitle = v.name ? v.name.toUpperCase() : "ФАСОВКА";
+                    // Если есть список выхода, берем имя оттуда для заголовка
+                    if(v.outputItems && v.outputItems.length > 0) {
+                        nameTitle = (v.outputItems.length > 1) ? `ФАСОВКА` : v.outputItems[0].name.toUpperCase();
+                    }
+                    
+                    h+=`<div class="card" style="padding-top:5px;padding-bottom:5px"><button class="del-rep-btn" onclick="event.stopPropagation();delFasFull('${v.id}')">🗑️</button>
+                    <div style="text-align:center;font-weight:900;border-bottom:1px solid #000;margin-bottom:5px;padding-bottom:5px;font-size:14px;color:#000">${nameTitle} ${fd2(v.date)}</div>`;
+                    
+                    // СЫРЬЕ
+                    h+=`<div style="font-weight:700;font-size:12px;color:#000;margin-bottom:2px">сырьё:</div>`;
                     if(v.items) {
                         v.items.forEach(i => {
-                             let srcLbl = (i.source === 'WeightStock') ? '<span style="color:#059669;font-size:9px;margin-left:2px">(пок)</span>' : '<span style="color:#3b82f6;font-size:9px;margin-left:2px">(ДВ)</span>';
-                             h+=`<div class="report-line"><span>${i.name} ${srcLbl}</span><b>${i.amount}кг</b></div>`;
+                             let sLbl = (i.source === 'WeightStock') ? '(пок)' : '(ДВ)';
+                             h+=`<div class="j-row" style="margin:0"><span class="j-dots">${i.name} ${sLbl}</span><span class="j-val" style="color:#000">-${i.amount}кг</span></div>`;
                         });
-                        h+=`<div class="report-line" style="background:#f1f5f9;padding:2px 5px;border-radius:4px"><span>Всего сырья:</span><b>${v.prihod}кг</b></div>`;
                     } else {
-                        h+=`<div class="report-line"><span>Сырье:</span><b>${v.prihod}кг [${v.rawItem}]</b></div>`;
+                        h+=`<div class="j-row"><span class="j-dots">${v.rawItem}</span><span class="j-val">-${v.prihod}кг</span></div>`;
                     }
-                    h+=`<div class="report-line"><span>Выход:</span><b>${v.vyhod}шт</b></div><div class="report-line"><span>Пакеты:</span><b>${v.size} [${pk(v.vyhod, v.name)}шт]</b></div><div class="report-line"><span>Пленка:</span><b>${pl(v.vzial, v.ostatok)}кг</b></div><div class="report-line"><span>Скотч:</span><b>${v.scotch||0} шт</b></div></div>`;
+
+                    h+=`<div style="border-bottom:1px dashed #000;margin:5px 0"></div>`;
+
+                    // ПРОДУКЦИЯ (ВЫХОД)
+                    h+=`<div style="font-weight:700;font-size:12px;color:#000;margin-bottom:2px">Выход:</div>`;
+                    if(v.outputItems) {
+                         v.outputItems.forEach(o => {
+                             h+=`<div class="j-row" style="margin:0"><span class="j-dots">${o.name}</span><span class="j-val" style="color:#000">+${o.count}шт</span></div>`;
+                         });
+                    } else {
+                         h+=`<div class="j-row"><span class="j-dots">${v.name}</span><span class="j-val">+${v.vyhod}шт</span></div>`;
+                    }
+
+                    h+=`<div style="border-bottom:1px dashed #000;margin:5px 0"></div>`;
+
+                    // УПАКОВКА
+                    let packList = [];
+                    if(v.outputItems) {
+                        v.outputItems.forEach(o => packList.push({n: `Пакеты ${o.size}`, v: Math.round(o.count / ((o.name==="Кутя")?19.8:9.9))}));
+                    } else {
+                        packList.push({n: `Пакеты ${v.size}`, v: Math.round(v.vyhod / ((v.name==="Кутя")?19.8:9.9))});
+                    }
+                    
+                    packList.forEach(p => {
+                        h+=`<div class="j-row" style="margin:0"><span class="j-dots">${p.n}</span><span class="j-val" style="color:#000">-${p.v}шт</span></div>`;
+                    });
+                    
+                    let plVal = v.vzial ? Math.abs(v.vzial - (v.ostatok||0)).toFixed(2) : '0';
+                    h+=`<div class="j-row" style="margin:0"><span class="j-dots">Пленка</span><span class="j-val" style="color:#000">-${plVal}кг</span></div>`;
+                    h+=`<div class="j-row" style="margin:0"><span class="j-dots">Скотч</span><span class="j-val" style="color:#000">-${v.scotch||0}шт</span></div>`;
+                    
+                    h+=`</div>`;
                 }
                 else if(type==='KRUP' || type==='VIBRO' || type==='ZSHM') {
                     let ts = (v.timeStart||'??') + ' — ' + (v.timeEnd||'??');
@@ -414,7 +454,11 @@ function rArchPack(c){ const d = data.ArchPackIn || {}; const gr = {}; if(d) Obj
 function rWH(c){const t={};gP('Готовая').forEach(p=>t[p]=0);if(data.Готовая)Object.values(data.Готовая).forEach(v=>t[v.name]+=v.amount);let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(n=>{h+=`<div class="item-card ${t[n]<0?'alarm-blink':''}"><div class="item-title">${n}</div><div class="item-qty">${Math.round(t[n])}</div><button class="history-btn" onclick="showH('Готовая','${n}')">📜</button><button class="corr-btn" onclick="openModal('corr','Готовая','${n}')">±</button></div>`;});c.innerHTML=h+'</div>';}
 function rWgh(c){const t={};gP('WeightStock').forEach(p=>t[p]=0);if(data.WeightStock)Object.values(data.WeightStock).forEach(v=>t[v.name]+=v.amount);let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(n=>{h+=`<div class="item-card ${t[n]<0?'alarm-blink':''}"><div class="item-title">${n}</div><div class="item-qty">${Math.round(t[n])}</div><button class="history-btn" onclick="showH('WeightStock','${n}')">📜</button><button class="corr-btn" onclick="openModal('corr','WeightStock','${n}')">±</button></div>`;});c.innerHTML=h+'</div>';}
 function rRaw(c){const t={};gP('Stock_Raw').forEach(p=>t[p]=0);if(data.Stock_Raw)Object.values(data.Stock_Raw).forEach(v=>t[v.name]+=v.amount);let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(n=>{h+=`<div class="item-card ${t[n]<0?'alarm-blink':''}"><div class="item-title">${n}</div><div class="item-qty">${Math.round(t[n])}</div><button class="history-btn" onclick="showH('Stock_Raw','${n}')">📜</button><button class="corr-btn" onclick="openModal('corr','Stock_Raw','${n}')">±</button></div>`;});c.innerHTML=h+'</div>';}
-function rGen(c){const d=data[cur]||{},t={},u='кг';Object.values(d).forEach(v=>{let k=v.name;if(k)t[k]=(t[k]||0)+v.amount});let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(k=>{const val=t[k];let alarm=val<0;if(cur==='Пленка'&&val<50)alarm=true;if(cur==='Скотч 360 грамм'&&val<30)alarm=true;if(cur==='Пакеты'&&val<3000)alarm=true;h+=`<div class="item-card ${alarm?'alarm-blink':''}"><div class="item-title">${k}</div><div class="item-qty">${cur==='Скотч 360 грамм'?val.toFixed(1):Math.round(val)} <small style="font-size:10px">${u}</small></div><button class="history-btn" onclick="showH('${cur}','${k}')">📜</button><button class="corr-btn" onclick="openModal('corr','${cur}','${k}')">±</button></div>`;});c.innerHTML=h+'</div>';}
+function rGen(c){const d=data[cur]||{},t={},u='кг';Object.values(d).forEach(v=>{let k=v.name;if(k)t[k]=(t[k]||0)+v.amount});let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(k=>{const val=t[k];let alarm=val<0;if(cur==='Пленка'&&val<50)alarm=true;if(cur==='Скотч 360 грамм'&&val<30)alarm=true;if(cur==='Пакеты'&&val<3000)alarm=true;
+let dispVal = Math.round(val); let unit = u;
+if(cur === 'Скотч 360 грамм') { unit = 'шт'; dispVal = val.toFixed(1); }
+if(cur === 'Пленка') { dispVal = val.toFixed(2); }
+h+=`<div class="item-card ${alarm?'alarm-blink':''}"><div class="item-title">${k}</div><div class="item-qty">${dispVal} <small style="font-size:10px">${unit}</small></div><button class="history-btn" onclick="showH('${cur}','${k}')">📜</button><button class="corr-btn" onclick="openModal('corr','${cur}','${k}')">±</button></div>`;});c.innerHTML=h+'</div>';}
 
 function showH(c, k) {
     const ti = document.getElementById('mT'), b = document.getElementById('mB');
@@ -637,19 +681,18 @@ function openModal(t, a1, a2){
         b.innerHTML=`
             <label class="l-t">ДАТА</label>
             <input type="date" id="fD" value="${td}">
-            <label class="l-t">НАЗВАНИЕ КРУПЫ (ГОТОВАЯ)</label>
-            <select id="fN">${gP('Готовая').map(p=>`<option>${p}</option>`).join('')}</select>
             
-            <div class="z-head" style="margin-top:10px">СЫРЬЕ (ИЗ ЧЕГО ФАСУЕМ)</div>
-            <div class="z-col-h" style="grid-template-columns:25% 45% 20% 10%"><div>ОТКУДА</div><div>ЧТО [ОСТАТОК]</div><div>КГ</div><div></div></div>
+            <div class="z-head" style="margin-top:10px">СЫРЬЕ (ВХОД)</div>
+            <div class="z-col-h" style="grid-template-columns:25% 45% 20% 10%"><div>ОТКУДА</div><div>ЧТО</div><div>КГ</div><div></div></div>
             <div id="fasRows"></div>
             <button class="btn-main" style="background:#fff;color:var(--p);border:1px solid #e2e8f0;padding:8px;font-size:11px" onclick="addFasRow()">+ ДОБАВИТЬ СЫРЬЕ</button>
             
+            <div class="z-head" style="margin-top:15px;background:#eef2ff;color:var(--p)">ГОТОВАЯ ПРОДУКЦИЯ (ВЫХОД)</div>
+            <div class="z-col-h" style="grid-template-columns:45% 25% 20% 10%"><div>НАЗВАНИЕ</div><div>ПАКЕТ</div><div>ШТ</div><div></div></div>
+            <div id="fasOutRows"></div>
+            <button class="btn-main" style="background:#fff;color:var(--p);border:1px solid #e2e8f0;padding:8px;font-size:11px" onclick="addFasOutRow()">+ ДОБАВИТЬ ПРОДУКЦИЮ</button>
+
             <div style="margin-top:15px;border-top:1px dashed #e2e8f0;padding-top:10px">
-                <label class="l-t">ПАКЕТ</label>
-                <select id="fS">${szs.map(s=>`<option>${s}</option>`).join('')}</select>
-                <label class="l-t">ВЫХОД (ШТ)</label>
-                <input type="number" id="fV" placeholder="Выход шт">
                 <label class="l-t">ВЗЯЛ ПЛЕНКИ (через +)</label>
                 <input type="text" id="fVz" placeholder="Например: 5+2.5">
                 <label class="l-t">ОСТАТОК ПЛЕНКИ</label>
@@ -657,20 +700,23 @@ function openModal(t, a1, a2){
             </div>
             <button class="btn-main" id="btnS" onclick="sFas()">СОХРАНИТЬ</button>
         `;
-        // Добавляем одну пустую строку сразу
-        setTimeout(addFasRow, 100);
+        // Добавляем по одной строке сразу
+        setTimeout(()=>{ addFasRow(); addFasOutRow(); }, 100);
     }
     else if(t==='addRaw'){
         ti.innerText='Приход Сырья';
         b.innerHTML=`Дата:<input type="date" id="rD" value="${td}">Название:${makeSelect('rN','Stock_Raw','Название')}Поставщик:${makeSelect('rSupp','','Поставщик',gRawActive(),'+ НОВЫЙ ПОСТАВЩИК')}Вес (кг):<input type="number" id="rA"><button class="btn-main" id="btnS" onclick="sRawInc()">ПРИНЯТЬ</button>`;
     }
     else if(t==='inc'){
+        ti.innerText='ПРИХОД НА СКЛАД';
         b.innerHTML=`<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:5px"><div><label class="l-t">ДАТА</label><input type="date" id="iD" value="${td}"></div><div><label class="l-t">№ НАКЛ</label><input type="text" id="iNum" placeholder="№"></div></div><div style="margin-bottom:5px"><label class="l-t">ПОСТАВЩИК</label>${makeSelect('iS','ArchIncoming','Поставщик',gBuyS(),'+ НОВЫЙ')}</div><div style="margin-bottom:5px"><label class="l-t">НАИМЕНОВАНИЕ</label>${makeSelect('iN','WeightStock','Товар',gP('WeightStock'),'+ НОВЫЙ')}</div><div style="margin-bottom:15px"><label class="l-t">ВЕС (КГ)</label><input type="number" id="iA" placeholder="0"></div><button class="btn-main" style="background:var(--s)" onclick="sInc()">ПРИНЯТЬ НА СКЛАД ПОКУПНАЯ</button>`;
     }
     else if(t==='addMatPack'){
+        ti.innerText='ПРИХОД УПАКОВКИ';
         b.innerHTML=`<input type="date" id="pD" value="${td}">${makeSelect('pS','ArchPackIn','Поставщик',gPackS(),'+ НОВЫЙ')}${makeSelect('pN','Пакеты','Вид',gPack('Пакеты'))}<input type="number" id="pA" placeholder="Кол-во"><button class="btn-main" style="margin-top:10px;background:var(--s)" onclick="sPack()">ПРИНЯТЬ</button>`;
     }
     else if(t==='ship'){
+        ti.innerText='ОТГРУЗКА СО СКЛАДА';
         b.innerHTML=`<div class="grid" style="grid-template-columns:2fr 1fr"><div class="col"><label class="lt">ДАТА</label><input type="date" id="hD" value="${td}"></div><div class="col"><label class="lt">№ НАКЛ</label><input type="text" id="hNum" placeholder="№"></div></div><div style="margin:5px 0"><label class="lt">КЛИЕНТ</label>${makeSelect('hC', 'ArchInvoices', 'Клиент', gCl(), '+ НОВЫЙ')}</div><div class="z-head">ОТКУДА ГРУЗИМ:</div><div class="dash-grid" style="margin-bottom:10px;grid-template-columns:1fr 1fr"><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Готовая')">ФАСОВКА</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('WeightStock')">ПОКУПНАЯ</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Stock_DV')">ДВ</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Stock_Feed')">КОРМА</button></div><div id="shpR"></div><button class="btn-main" id="btnS" onclick="sShip()" style="margin-top:15px;background:var(--d)">ОТГРУЗИТЬ</button>`;
     }
     else if(t==='fixBal') { ti.innerText='Фиксация остатков'; b.innerHTML=`<p style="font-size:12px;color:#666">Зафиксировать текущие остатки как "Входящий остаток" на начало выбранного дня?</p><input type="date" id="fixDate" value="${td}"><button class="btn-main" id="btnFix" onclick="sFixBal()" style="background:#f59e0b">СОХРАНИТЬ МЕТКУ</button>`; }
@@ -706,16 +752,27 @@ function updFasRawList(rid) {
              stock[v.name] = (stock[v.name] || 0) + v.amount;
         });
     }
-    
-    // Фильтруем только то, где остаток > 0
     let list = Object.keys(stock).filter(k => stock[k] > 0).sort();
-    
     let opts = '<option value="">Выбрать...</option>';
     list.forEach(k => {
         opts += `<option value="${k}">${k} [Ост: ${Math.round(stock[k])}кг]</option>`;
     });
-
     document.getElementById('cont_'+rid).innerHTML = `<select id="nm_${rid}" class="smart-sel" style="font-size:11px">${opts}</select>`;
+}
+
+function addFasOutRow() {
+    const rid = Date.now() + Math.random();
+    let nOpts = gP('Готовая').map(p=>`<option>${p}</option>`).join('');
+    let sOpts = szs.map(s=>`<option>${s}</option>`).join('');
+    
+    const h = `
+    <div class="fas-out-row" id="fo_${rid}">
+        <select id="outN_${rid}" class="smart-sel" style="font-size:11px">${nOpts}</select>
+        <select id="outS_${rid}" class="smart-sel" style="font-size:11px">${sOpts}</select>
+        <input type="number" id="outQ_${rid}" class="u-inp" placeholder="Шт">
+        <button class="del-row-btn" onclick="document.getElementById('fo_${rid}').remove()">✕</button>
+    </div>`;
+    document.getElementById('fasOutRows').insertAdjacentHTML('beforeend', h);
 }
 
 function genDayReport() {
@@ -753,7 +810,14 @@ function genDayReport() {
             } else {
                 addUsed(v.rawItem, parseFloat(v.prihod), 'кг'); 
             }
-            addProd(v.name, parseFloat(v.vyhod), 'шт'); 
+            // Поддержка мульти-выхода
+            if(v.outputItems) {
+                v.outputItems.forEach(o => {
+                    addProd(o.name, parseFloat(o.count), 'шт');
+                });
+            } else {
+                addProd(v.name, parseFloat(v.vyhod), 'шт'); 
+            }
         }
     });
     ['Vibro_Report', 'Krup_Report', 'ZSHM_Report'].forEach(dbName => {
@@ -995,8 +1059,6 @@ async function sCorr() {
 async function sFas() {
     const btn=document.getElementById('btnS');
     const d=document.getElementById('fD').value;
-    const n=document.getElementById('fN').value;
-    const s=document.getElementById('fS').value;
     
     // Сбор мульти-сырья
     const rawItems = [];
@@ -1005,7 +1067,7 @@ async function sFas() {
     for(let row of rows) {
         const rid = row.id.split('_')[1];
         const src = document.getElementById('src_'+rid).value;
-        const nm = document.getElementById('nm_'+rid).value; // Читаем значение из простого SELECT
+        const nm = document.getElementById('nm_'+rid).value; 
         const qty = parseFloat(document.getElementById('qty_'+rid).value);
         if(nm && qty > 0) {
             rawItems.push({name: nm, amount: qty, source: src});
@@ -1013,48 +1075,70 @@ async function sFas() {
         }
     }
 
-    if(rawItems.length === 0) return alert("Добавьте хотя бы одно сырье!");
+    // Сбор мульти-выхода
+    const outItems = [];
+    let totalV = 0;
+    const outRows = document.getElementById('fasOutRows').children;
+    for(let row of outRows) {
+        const rid = row.id.split('_')[1];
+        const nm = document.getElementById('outN_'+rid).value;
+        const sz = document.getElementById('outS_'+rid).value;
+        const qty = parseFloat(document.getElementById('outQ_'+rid).value);
+        if(nm && qty > 0) {
+            outItems.push({name: nm, size: sz, count: qty});
+            totalV += qty;
+        }
+    }
 
-    const v=parseFloat(document.getElementById('fV').value)||0;
+    if(rawItems.length === 0) return alert("Добавьте хотя бы одно сырье!");
+    if(outItems.length === 0) return alert("Добавьте хотя бы одну продукцию!");
+
     const os=parseFloat(document.getElementById('fOs').value)||0;
     let vzStr=document.getElementById('fVz').value;
     let vzTotal = vzStr.split('+').reduce((acc, val) => { let num = parseFloat(val.replace(',', '.').trim()); return acc + (isNaN(num) ? 0 : num); }, 0);
     
     btn.disabled = true; btn.innerText = "СОХРАНЯЮ...";
     try {
-        const k=(n==="Кутя")?19.8:9.9; 
-        const sp=-Math.round(v/k); 
         const plUsed=Math.abs(vzTotal-os); 
-        const scUsed=parseFloat(((v*0.12)/360).toFixed(1));
+        const scUsed=parseFloat(((totalV*0.12)/360).toFixed(1));
         const fId=db.child('Фасовка').push().key; 
         const ts=new Date().toISOString(); 
         const dV=d+"T12:00:00Z";
         
         const updates={};
         
-        // Формируем сводку для старых полей (для совместимости)
         const rawSummary = rawItems.map(i => `${i.name}`).join(' + ');
 
         updates['/Фасовка/'+fId]={
-            date:dV, name:n, size:s, vyhod:v, 
-            prihod:totalP, // Общий вес сырья
-            items: rawItems, // Детализация сырья
-            rawItem: rawSummary, // Для списка
+            date:dV, 
+            prihod:totalP, 
+            items: rawItems, 
+            outputItems: outItems, // Новый массив выхода
+            rawItem: rawSummary, 
             vzial:vzTotal, ostatok:os, scotch:scUsed, link:fId, ts:ts
         };
 
-        updates['/Готовая/'+db.child('Готовая').push().key]={name:n,amount:v,date:dV,note:'Фасовка',fLink:fId,ts:ts};
-        
-        // Списываем каждое сырье
+        // Списываем сырье
         rawItems.forEach(item => {
              updates[`/${item.source}/`+db.child(item.source).push().key]={
-                 name:item.name, amount:-item.amount, date:dV, note:'Фасовка: '+n, fLink:fId, ts:ts
+                 name:item.name, amount:-item.amount, date:dV, note:'Фасовка (Сырье)', fLink:fId, ts:ts
              };
         });
 
-        updates['/Пакеты/'+db.child('Пакеты').push().key]={name:s,amount:sp,date:dV,note:'(авто) Фасовка: '+n,fLink:fId,ts:ts};
-        updates['/Пленка/'+db.child('Пленка').push().key]={name:n,amount:-plUsed,date:dV,note:'(авто) Фасовка: '+n,fLink:fId,ts:ts};
-        updates['/Скотч 360 грамм/'+db.child('Скотч 360 грамм').push().key]={name:'Скотч 360 грамм',amount:-scUsed,date:dV,note:'(авто) Фасовка: '+n,fLink:fId,ts:ts};
+        // Зачисляем продукцию и списываем пакеты
+        outItems.forEach(item => {
+             // Продукция на склад
+             updates['/Готовая/'+db.child('Готовая').push().key]={name:item.name, amount:item.count, date:dV, note:'Фасовка', fLink:fId, ts:ts};
+             
+             // Списание пакетов (расчет)
+             const k=(item.name==="Кутя")?19.8:9.9;
+             const sp=-Math.round(item.count/k);
+             updates['/Пакеты/'+db.child('Пакеты').push().key]={name:item.size, amount:sp, date:dV, note:`(авто) ${item.name}`, fLink:fId, ts:ts};
+        });
+
+        // Пленка и скотч (общие)
+        updates['/Пленка/'+db.child('Пленка').push().key]={name:'Пленка', amount:-plUsed, date:dV, note:'(авто) Фасовка', fLink:fId, ts:ts};
+        updates['/Скотч 360 грамм/'+db.child('Скотч 360 грамм').push().key]={name:'Скотч 360 грамм', amount:-scUsed, date:dV, note:'(авто) Фасовка', fLink:fId, ts:ts};
         
         await db.update(updates);
         closeModal();
