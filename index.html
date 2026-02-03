@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Склад v555 "Упаковка"</title>
+<title>Склад v565 "Фикс Списания"</title>
 <script>
     window.onerror = function(msg, url, line) {
         alert("ОШИБКА:\n" + msg + "\nСтрока: " + line + "\nПришлите скриншот!");
@@ -319,9 +319,13 @@ function rConsolidated(c) {
         let h = `<div class="z-head" style="background:${color};color:#333;border:1px solid #ddd">${title}</div><div class="item-grid" style="grid-template-columns:1fr 1fr;">`;
         items.forEach(k => {
             let val = dataObj[k];
+            // ФИКС ОТОБРАЖЕНИЯ ПЛЕНКИ
+            let displayVal = Math.round(val);
+            if (title.includes('ПЛЕНКА')) displayVal = val.toFixed(2);
+            
             h += `<div class="item-card" style="text-align:left;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
                 <span style="font-size:11px;font-weight:700;color:#475569">${k}</span>
-                <span style="font-size:14px;font-weight:900;color:#0f172a">${Math.round(val)}<small style="font-size:9px;color:#94a3b8;margin-left:2px">${unit}</small></span>
+                <span style="font-size:14px;font-weight:900;color:#0f172a">${displayVal}<small style="font-size:9px;color:#94a3b8;margin-left:2px">${unit}</small></span>
             </div>`;
         });
         return h + `</div>`;
@@ -392,8 +396,8 @@ function renderByTiles(c, rawD, type) {
                     h+=`<div style="font-weight:700;font-size:12px;color:#000;margin-bottom:2px">сырьё:</div>`;
                     if(v.items) {
                         v.items.forEach(i => {
-                             let sLbl = (i.source === 'WeightStock') ? '(пок)' : '(ДВ)';
-                             h+=`<div class="j-row" style="margin:0"><span class="j-dots">${i.name} ${sLbl}</span><span class="j-val" style="color:#000">-${i.amount}кг</span></div>`;
+                             let srcLbl = (i.source === 'WeightStock') ? '(пок)' : '(ДВ)';
+                             h+=`<div class="j-row" style="margin:0"><span class="j-dots">${i.name} ${srcLbl}</span><span class="j-val" style="color:#000">-${i.amount}кг</span></div>`;
                         });
                     } else {
                         h+=`<div class="j-row"><span class="j-dots">${v.rawItem}</span><span class="j-val">-${v.prihod}кг</span></div>`;
@@ -1020,6 +1024,42 @@ async function saveGen(type) {
     if(addName && addW > 0) rawDesc += ` + ${addName} (${addW}кг)`;
     if(!confirm(`${conf.title}: Сохранить смену?\n\nВход: ${rawDesc}\nВыход: ${totalProd.toFixed(1)}кг`)) return;
     btn.disabled = true; btn.innerText = "СОХРАНЯЮ...";
+    
+    // --- АВТОСПИСАНИЕ МЕШКОВ, ЭТИКЕТОК, НИТОК ---
+    let totalBagsAll = 0;
+    let bags25ToDed = 0;
+    let labelsToDed = {};
+
+    items.forEach(i => {
+        totalBagsAll += i.q;
+        
+        // Логика списания мешков 25кг и этикеток
+        if (i.w === 25) {
+            let nLow = i.n.toLowerCase();
+            
+            // Если Арнаутка 3 - пропускаем списание этикетки и мешка
+            if (nLow.includes('арнаутка 3')) return;
+
+            let labelName = null;
+            if (nLow.includes('арнаутка')) labelName = 'Этикетка Арнаутка';
+            else if (nLow.includes('ячка')) labelName = 'Этикетка Ячка';
+            else if (nLow.includes('пшеничка')) labelName = 'Этикетка Пшеничка';
+            else if (nLow.includes('перловка')) labelName = 'Этикетка Перловка';
+            else if (nLow.includes('горох')) labelName = 'Этикетка Горох';
+            else if (nLow.includes('пшоно')) labelName = 'Этикетка Пшоно';
+            else if (nLow.includes('кукуруза')) labelName = 'Этикетка Кукуруза';
+            
+            // Если нашли совпадение, добавляем к списанию
+            if (labelName) {
+                bags25ToDed += i.q;
+                labelsToDed[labelName] = (labelsToDed[labelName] || 0) + i.q;
+            }
+        }
+    });
+    
+    let threadDed = totalBagsAll / 1000; // 1 шт на 1000 мешков (считаем все)
+    // ---------------------------------------------
+
     try {
         const repId = db.child(conf.db).push().key; 
         const updates = {};
@@ -1042,6 +1082,18 @@ async function saveGen(type) {
             let amount = (i.q * i.w) + i.l; 
             updates[`/${dest}/${db.child(dest).push().key}`] = { name: finalName, amount: amount, date: dV, ts: ts, note: note, fLink: repId };
         });
+        
+        // ЗАПИСЬ АВТОСПИСАНИЯ
+        if (bags25ToDed > 0) {
+            updates['/Мешки/'+db.child('Мешки').push().key] = {name: 'Мешки', amount: -bags25ToDed, date: dV, ts: ts, note: `(авто) ${conf.title}`, fLink: repId};
+        }
+        if (threadDed > 0) {
+            updates['/Нитки/'+db.child('Нитки').push().key] = {name: 'Нитки', amount: -threadDed, date: dV, ts: ts, note: `(авто) ${conf.title}`, fLink: repId};
+        }
+        Object.keys(labelsToDed).forEach(lName => {
+            updates['/Этикетка/'+db.child('Этикетка').push().key] = {name: lName, amount: -labelsToDed[lName], date: dV, ts: ts, note: `(авто) ${conf.title}`, fLink: repId};
+        });
+
         updates[`/${conf.db}/${repId}`] = { date: dV, ts: ts, link: repId, items: items, rawMix: rawDesc, timeStart: tS, timeEnd: tE, operator: op, assistant: as, type: type };
         await db.update(updates);
         closeModal();
