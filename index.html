@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Склад v565 "Фикс Списания"</title>
+<title>Склад v570 "Архивариус"</title>
 <script>
     window.onerror = function(msg, url, line) {
         alert("ОШИБКА:\n" + msg + "\nСтрока: " + line + "\nПришлите скриншот!");
@@ -345,7 +345,12 @@ function rConsolidated(c) {
     let thread = sumCat(['Нитки']); h += drawSection('🧵 НИТКИ', thread, 'шт', '#f1f5f9');
     let label = sumCat(['Этикетка']); h += drawSection('🏷️ ЭТИКЕТКА', label, 'шт', '#f1f5f9');
     h += '</div>';
-    h += `<div style="margin-top:15px;border-top:1px dashed #ccc;padding-top:15px"><button class="btn-main" onclick="openModal('fixBal')" style="background:#f59e0b;color:#fff;border:1px solid #d97706">🔒 ЗАФИКСИРОВАТЬ НАЧАЛО МЕСЯЦА</button><div style="font-size:10px;color:#666;text-align:center;margin-top:5px">Создать метку "Остаток" в истории</div></div>`;
+    // НОВАЯ КНОПКА АРХИВАЦИИ
+    h += `<div style="margin-top:15px;border-top:1px dashed #ccc;padding-top:15px;display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        <button class="btn-main" onclick="openModal('fixBal')" style="background:#f59e0b;color:#fff;border:1px solid #d97706;font-size:10px">🔒 ЗАФИКСИРОВАТЬ</button>
+        <button class="btn-main" onclick="openModal('archiveOld')" style="background:#dc2626;color:#fff;border:1px solid #b91c1c;font-size:10px">🧹 СВЕРТКА БАЗЫ</button>
+        <div style="font-size:10px;color:#666;text-align:center;margin-top:5px;grid-column:1/-1">Очистка старых данных с сохранением остатков</div>
+    </div>`;
     c.innerHTML = h || '<div style="text-align:center;padding:20px;color:#999">Склады пусты</div>';
 }
 
@@ -396,7 +401,7 @@ function renderByTiles(c, rawD, type) {
                     h+=`<div style="font-weight:700;font-size:12px;color:#000;margin-bottom:2px">сырьё:</div>`;
                     if(v.items) {
                         v.items.forEach(i => {
-                             let srcLbl = (i.source === 'WeightStock') ? '(пок)' : '(ДВ)';
+                             let srcLbl = (i.source === 'WeightStock') ? '<span style="color:#059669;font-size:9px;margin-left:2px">(пок)</span>' : '<span style="color:#3b82f6;font-size:9px;margin-left:2px">(ДВ)</span>';
                              h+=`<div class="j-row" style="margin:0"><span class="j-dots">${i.name} ${srcLbl}</span><span class="j-val" style="color:#000">-${i.amount}кг</span></div>`;
                         });
                     } else {
@@ -556,6 +561,76 @@ async function sFixBal() {
     });
     try { await db.update(updates); alert(`Готово! Зафиксировано ${count} позиций на дату ${dVal}`); closeModal(); } 
     catch(e) { alert("Ошибка: " + e); btn.disabled = false; btn.innerText = "СОХРАНИТЬ"; }
+}
+
+// НОВАЯ ФУНКЦИЯ ДЛЯ СВЕРТКИ БАЗЫ
+async function runArchive() {
+    const dVal = document.getElementById('archDate').value;
+    if(!dVal) return alert('Выберите дату свертки!');
+    if(!confirm(`ВНИМАНИЕ!\n\nВы собираетесь СВЕРНУТЬ базу данных до ${dVal}.\n\n1. Программа посчитает остатки на эту дату.\n2. Создаст запись "Входящий остаток".\n3. УДАЛИТ ВСЮ ИСТОРИЮ до этой даты.\n\nЭто действие нельзя отменить. Продолжить?`)) return;
+    
+    const btn = document.getElementById('btnArch');
+    btn.disabled = true; btn.innerText = "СЧИТАЮ И УДАЛЯЮ...";
+    
+    const cutoffDate = dVal + "T00:00:00.000Z";
+    const stockCats = ['Stock_DV', 'Stock_Semi', 'Stock_Feed', 'Stock_Raw', 'WeightStock', 'Готовая', 'Пакеты', 'Пленка', 'Скотч 360 грамм', 'Мешки', 'Нитки', 'Этикетка'];
+    const reportCats = ['Фасовка', 'Krup_Report', 'Vibro_Report', 'ZSHM_Report', 'ArchInvoices', 'ArchIncoming', 'ArchPackIn'];
+    
+    const updates = {};
+    let fixCount = 0;
+    let delCount = 0;
+
+    // 1. Считаем остатки и удаляем старое в складах
+    stockCats.forEach(cat => {
+        if (!data[cat]) return;
+        const sums = {};
+        
+        Object.entries(data[cat]).forEach(([key, v]) => {
+            if (v.date < cutoffDate) {
+                sums[v.name] = (sums[v.name] || 0) + v.amount;
+                updates[`/${cat}/${key}`] = null; // Удаляем старую запись
+                delCount++;
+            }
+        });
+
+        // Создаем записи остатков
+        Object.keys(sums).forEach(name => {
+            const amount = sums[name];
+            if (Math.abs(amount) > 0.01) {
+                const key = db.child(cat).push().key;
+                // Ставим дату свертки + 1 миллисекунда, чтобы они были "после" удаления
+                updates[`/${cat}/${key}`] = { 
+                    name: name, 
+                    amount: amount, 
+                    date: cutoffDate, 
+                    ts: new Date().toISOString(), 
+                    note: `🟢 СВЕРТКА БАЗЫ`, 
+                    isFix: true 
+                };
+                fixCount++;
+            }
+        });
+    });
+
+    // 2. Просто удаляем старые отчеты (они не влияют на остаток, он уже посчитан выше)
+    reportCats.forEach(cat => {
+        if (!data[cat]) return;
+        Object.entries(data[cat]).forEach(([key, v]) => {
+            if (v.date < cutoffDate) {
+                updates[`/${cat}/${key}`] = null;
+                delCount++;
+            }
+        });
+    });
+
+    try {
+        await db.update(updates);
+        alert(`Готово!\n\nУдалено записей: ${delCount}\nСоздано точек возврата: ${fixCount}\n\nБаза данных очищена до ${dVal}`);
+        closeModal();
+    } catch (e) {
+        alert("Ошибка при свертке: " + e);
+        btn.disabled = false; btn.innerText = "СВЕРНУТЬ БАЗУ";
+    }
 }
 
 function rInvD(c){ 
@@ -728,6 +803,19 @@ function openModal(t, a1, a2){
     else if(t==='dayRep') { 
         ti.innerText = 'Дневной отчет';
         b.innerHTML = `<label class="l-t">ВЫБЕРИТЕ ДАТУ</label><input type="date" id="repDate" value="${td}" style="margin-bottom:15px"><button class="btn-main" onclick="genDayReport()">СФОРМИРОВАТЬ</button>`;
+    }
+    else if(t==='archiveOld') {
+        ti.innerText = 'СВЕРТКА БАЗЫ (ОПАСНО)';
+        b.innerHTML = `
+            <div style="background:#fee2e2;padding:10px;border-radius:10px;border:1px solid #f87171;color:#b91c1c;font-size:12px;margin-bottom:15px">
+                <b>ВНИМАНИЕ!</b><br>
+                Эта функция удалит все старые записи до выбранной даты, но сохранит текущие остатки одной строкой.<br>
+                Это нужно делать, чтобы база не тормозила.
+            </div>
+            <label class="l-t">СВЕРНУТЬ ДО ДАТЫ:</label>
+            <input type="date" id="archDate" value="${td}" style="margin-bottom:15px">
+            <button class="btn-main" id="btnArch" onclick="runArchive()" style="background:#dc2626;border:none">НАЧАТЬ СВЕРТКУ</button>
+        `;
     }
     document.getElementById('mdl').style.display='flex';
 }
