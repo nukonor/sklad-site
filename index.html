@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Склад v570 "Архивариус"</title>
+<title>Склад v650 "Автоматика"</title>
 <script>
     window.onerror = function(msg, url, line) {
         alert("ОШИБКА:\n" + msg + "\nСтрока: " + line + "\nПришлите скриншот!");
@@ -14,99 +14,102 @@
 <style>
 /* GLOBAL & RESET */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-:root { --bg: #f1f5f9; --p: #4f46e5; --d: #ef4444; --s: #10b981; --t: #1e293b; --w: #fff; }
+:root { --bg: #f8fafc; --p: #4338ca; --d: #dc2626; --s: #059669; --t: #0f172a; --w: #fff; --blue: #2563eb; --red: #e11d48; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); margin: 0; padding: 5px; padding-bottom: 80px; color: var(--t); overflow-x: hidden; width: 100vw; }
 
 /* LOCK SCREEN */
 #lockScreen { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: opacity 0.3s; }
 .lock-hidden { opacity: 0; pointer-events: none; }
 .lock-logo { width: 100px; margin-bottom: 20px; }
-.lock-title { font-size: 14px; font-weight: 900; color: #94a3b8; letter-spacing: 2px; margin-bottom: 30px; text-transform: uppercase; }
-.lock-inp { width: 100%; max-width: 250px; padding: 15px; font-size: 18px; text-align: center; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 10px; }
+.lock-title { font-size: 16px; font-weight: 900; color: #475569; letter-spacing: 2px; margin-bottom: 30px; text-transform: uppercase; }
+.lock-inp { width: 100%; max-width: 250px; padding: 15px; font-size: 18px; text-align: center; border: 2px solid #cbd5e1; border-radius: 12px; margin-bottom: 10px; color: #000; font-weight: bold; }
 
 /* DASHBOARD */
 .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 100%; margin: 0 auto; }
-.dash-item { background: var(--w); border-radius: 16px; padding: 15px 5px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: var(--p); font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border: 1px solid #e2e8f0; transition: 0.1s; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80px; }
-.dash-item:active { transform: scale(0.97); background: #eef2ff; }
+.dash-item { background: var(--w); border-radius: 16px; padding: 15px 5px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); color: var(--p); font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border: 1px solid #cbd5e1; transition: 0.1s; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80px; }
+.dash-item:active { transform: scale(0.97); background: #eef2ff; border-color: var(--p); }
 .dash-item span { font-size: 24px; margin-bottom: 8px; display: block; }
 
 /* CARD */
-.card { background: var(--w); border-radius: 16px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; position: relative; width: 100%; }
-.btn-main { background: var(--p); color: #fff; border: none; width: 100%; padding: 14px; font-size: 13px; font-weight: 700; border-radius: 12px; margin: 5px 0; text-transform: uppercase; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); transition: 0.2s; cursor: pointer; }
+.card { background: var(--w); border-radius: 16px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; position: relative; width: 100%; }
+.btn-main { background: var(--p); color: #fff; border: none; width: 100%; padding: 14px; font-size: 13px; font-weight: 800; border-radius: 12px; margin: 5px 0; text-transform: uppercase; box-shadow: 0 4px 10px rgba(67, 56, 202, 0.2); transition: 0.2s; cursor: pointer; }
 .btn-main:active { transform: translateY(1px); box-shadow: none; }
 .btn-main:disabled { background: #94a3b8; cursor: not-allowed; }
 
 /* NAV */
-.bottom-nav { display: none; position: fixed; bottom: 10px; left: 10px; right: 10px; background: #fff; border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.15); padding: 5px; z-index: 900; grid-template-columns: 1fr 1fr; gap: 5px; border: 1px solid #e2e8f0; }
-.bottom-nav button { background: transparent; border: none; padding: 12px; border-radius: 14px; color: #94a3b8; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
-.bottom-nav button.nav-btn-active { background: #eef2ff; color: var(--p); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.bottom-nav { display: none; position: fixed; bottom: 10px; left: 10px; right: 10px; background: #fff; border-radius: 20px; box-shadow: 0 10px 40px -5px rgba(0,0,0,0.2); padding: 5px; z-index: 900; grid-template-columns: 1fr 1fr; gap: 5px; border: 1px solid #cbd5e1; }
+.bottom-nav button { background: transparent; border: none; padding: 12px; border-radius: 14px; color: #64748b; font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
+.bottom-nav button.nav-btn-active { background: #e0e7ff; color: var(--p); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 body.nav-active .bottom-nav { display: grid; }
 
-input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; background: #fff; font-weight: 600; color: #0f172a; }
-input:focus, select:focus { border-color: var(--p); background: #f8fafc; }
+input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #94a3b8; border-radius: 10px; font-size: 16px; background: #fff; font-weight: 700; color: #0f172a; }
+input:focus, select:focus { border-color: var(--p); background: #f8fafc; outline: 2px solid #e0e7ff; }
 
 /* ITEMS GRID */
-.item-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-.item-card { background: #fff; border-radius: 12px; padding: 10px 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; position: relative; }
-.item-title { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 4px; height: 22px; overflow: hidden; line-height: 1.1; word-break: break-word; }
-.item-qty { font-size: 14px; font-weight: 900; color: #0f172a; margin-bottom: 4px; }
+.item-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.item-card { background: #fff; border-radius: 12px; padding: 10px 2px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); border: 1px solid #cbd5e1; position: relative; }
+.item-title { font-size: 10px; font-weight: 900; text-transform: uppercase; color: #1e293b; margin-bottom: 4px; height: 24px; overflow: hidden; line-height: 1.1; word-break: break-word; }
+.item-qty { font-size: 15px; font-weight: 900; color: #000; margin-bottom: 4px; }
 .alarm-blink { background: #fef2f2 !important; border: 1px solid var(--d) !important; animation: blink 1s infinite alternate; }
 
 /* MODAL */
-.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-.modal-box { background: #fff; width: 96%; max-width: 400px; border-radius: 20px; max-height: 94vh; display: flex; flex-direction: column; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2); }
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.modal-box { background: #fff; width: 96%; max-width: 400px; border-radius: 20px; max-height: 94vh; display: flex; flex-direction: column; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3); }
 .modal-body { overflow-y: auto; padding: 15px; }
 
 /* UTILS */
-.report-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px dashed #e2e8f0; }
-.history-btn { border: none; background: #e0e7ff; color: var(--p); border-radius: 8px; padding: 8px; font-weight: 700; font-size: 12px; width: 45%; }
-.corr-btn { display: none; border: none; background: #fef3c7; color: #d97706; border-radius: 8px; padding: 8px; font-weight: 700; font-size: 12px; width: 45%; margin-top: 4px; }
+.report-line { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; border-bottom: 1px dashed #cbd5e1; color: #000; font-weight: 600; }
+.history-btn { border: none; background: #e0e7ff; color: var(--p); border-radius: 8px; padding: 8px; font-weight: 800; font-size: 12px; width: 45%; }
+.corr-btn { display: none; border: none; background: #fef3c7; color: #d97706; border-radius: 8px; padding: 8px; font-weight: 800; font-size: 12px; width: 45%; margin-top: 4px; }
 .show-corr .corr-btn { display: inline-block; }
-.hist-pos { color: var(--p) !important; font-weight: 700; } .hist-neg { color: var(--d) !important; font-weight: 700; }
+
+/* ЖЕЛЕЗОБЕТОННЫЕ ЦВЕТА */
+.hist-pos, .val-pos { color: #2563eb !important; font-weight: 900; } 
+.hist-neg, .val-neg { color: #dc2626 !important; font-weight: 900; }
 
 /* ARCHIVE TILES */
 .arch-y-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; width: 100%; }
 .arch-tile-y { background: #3b82f6; color: #fff; padding: 25px 5px; border-radius: 16px; text-align: center; font-weight: 900; font-size: 20px; cursor: pointer; box-shadow: 0 8px 15px -3px rgba(59, 130, 246, 0.4); }
 .arch-m-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; width: 100%; }
-.arch-tile-m { background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px 2px; text-align: center; font-size: 10px; font-weight: 700; color: #334155; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-transform:uppercase; }
+.arch-tile-m { background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px 2px; text-align: center; font-size: 11px; font-weight: 800; color: #334155; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-transform:uppercase; }
 .arch-content { display: none; margin-bottom: 15px; width: 100%; }
-.arch-inv { background: #fff; border-left: 4px solid var(--p); border-radius: 12px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; font-size: 13px; cursor: pointer; border: 1px solid #f1f5f9; width: 100%; }
-.arch-tile-c { background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:13px; margin-bottom:5px; cursor:pointer }
+.arch-inv { background: #fff; border-left: 4px solid var(--p); border-radius: 12px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; font-size: 13px; cursor: pointer; border: 1px solid #e2e8f0; width: 100%; font-weight: 600; color: #000; }
+.arch-tile-c { background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:13px; margin-bottom:5px; cursor:pointer; color: #1e293b; }
 .arch-badge { background:#eef2ff; color:var(--p); padding:2px 6px; border-radius:6px; font-size:10px; }
 
 /* JOURNAL CARDS */
-.j-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 8px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; position: relative; }
+.j-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 8px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; position: relative; }
 .j-head { font-weight: 900; font-size: 14px; text-transform: uppercase; color: var(--p); margin-bottom: 4px; }
-.j-sub { font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 12px; border-bottom:1px solid #f1f5f9; padding-bottom:6px; }
-.j-title { font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
+.j-sub { font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 12px; border-bottom:1px solid #f1f5f9; padding-bottom:6px; }
+.j-title { font-size: 16px; font-weight: 900; color: #1e293b; margin-bottom: 10px; }
 .j-body { font-size: 13px; color: #334155; }
 .j-row { display: flex; justify-content: space-between; padding: 4px 0; align-items:end; margin-bottom:2px; }
-.j-dots { flex-grow: 1; border-bottom: 1px dotted #94a3b8; margin: 0 6px; position: relative; top: -5px; color:#334155; font-weight:600; font-size:13px; }
-.j-val { font-weight:800; color:#0f172a; white-space:nowrap; }
+.j-dots { flex-grow: 1; border-bottom: 2px dotted #cbd5e1; margin: 0 6px; position: relative; top: -5px; color:#1e293b; font-weight:700; font-size:13px; }
+.j-val { font-weight:900; color:#000; white-space:nowrap; }
 
 /* BASKET */
-.bulk-q{border:2px solid #e2e8f0!important;text-align:center;color:var(--p)}
+.bulk-q{border:2px solid #cbd5e1!important;text-align:center;color:var(--p);font-weight:700}
 .bulk-q:focus{border-color:var(--p)!important;background:#eef2ff}
 
 /* OTHER UTILS */
 .logo-box { text-align: center; margin-bottom: 20px; margin-top: 5px; }
 .logo-img { max-width: 220px; height: auto; object-fit: contain; }
-.l-t { font-size:9px; font-weight:800; color:#64748b; margin-bottom:2px; display:block; text-transform:uppercase; }
+.l-t { font-size:10px; font-weight:900; color:#475569; margin-bottom:3px; display:block; text-transform:uppercase; letter-spacing: 0.5px; }
 .smart-wrap { width:100%; height:30px; position:relative; }
-.smart-sel, .smart-inp, .u-inp { width:100%; height:100%; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; background:#fff; padding:0 5px; margin:0; box-sizing:border-box; font-weight:600; color:#1e293b; }
+.smart-sel, .smart-inp, .u-inp { width:100%; height:100%; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; background:#fff; padding:0 5px; margin:0; box-sizing:border-box; font-weight:700; color:#1e293b; }
 .smart-inp { display:none; border:1px solid var(--p); }
 .u-inp { text-align:center; }
 .del-row-btn { width:100%; height:30px; background:#fee2e2; border:1px solid #fca5a5; color:red; border-radius:6px; font-weight:900; display:flex; align-items:center; justify-content:center; }
 .dyn-row { display: grid; grid-template-columns: 32% 16% 16% 16% 8%; gap:4px; align-items: center; margin-bottom:5px; }
-.z-head { font-size:10px; color:#047857; font-weight:900; text-align:center; margin:15px 0 5px; letter-spacing:1px; background:#ecfdf5; padding:4px; border-radius:4px; text-transform: uppercase; }
-.z-col-h { display:grid; grid-template-columns: 32% 16% 16% 16% 8%; gap:4px; text-align:center; font-size:9px; color:#64748b; font-weight:700; margin-bottom:4px; }
+.z-head { font-size:11px; color:#047857; font-weight:900; text-align:center; margin:15px 0 5px; letter-spacing:1px; background:#ecfdf5; padding:5px; border-radius:4px; text-transform: uppercase; border: 1px solid #a7f3d0; }
+.z-col-h { display:grid; grid-template-columns: 32% 16% 16% 16% 8%; gap:4px; text-align:center; font-size:10px; color:#475569; font-weight:800; margin-bottom:4px; }
 .del-rep-btn { position: absolute; top: 5px; right: 5px; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 99; opacity: 0.3; transition: 0.2s; }
 .del-rep-btn:active { opacity: 1; transform: scale(1.1); }
-.day-rep-box { background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; font-family: monospace; font-size: 12px; color: #333; white-space: pre-wrap; margin-bottom: 10px; }
+.day-rep-box { background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #cbd5e1; font-family: monospace; font-size: 12px; color: #000; white-space: pre-wrap; margin-bottom: 10px; font-weight: 600; }
 .dr-h { font-weight: 900; border-bottom: 1px dashed #94a3b8; margin: 10px 0 5px; color: #000; text-transform: uppercase; }
 
 /* FASOVKA ROW */
-.fas-row { display: grid; grid-template-columns: 25% 45% 20% 10%; gap: 3px; align-items: center; margin-bottom: 5px; background: #f8fafc; padding: 3px; border-radius: 6px; border:1px solid #e2e8f0; }
+.fas-row { display: grid; grid-template-columns: 25% 45% 20% 10%; gap: 3px; align-items: center; margin-bottom: 5px; background: #f8fafc; padding: 3px; border-radius: 6px; border:1px solid #cbd5e1; }
 .fas-out-row { display: grid; grid-template-columns: 45% 25% 20% 10%; gap: 3px; align-items: center; margin-bottom: 5px; background: #eef2ff; padding: 3px; border-radius: 6px; border:1px solid #c7d2fe; }
 
 @media print {
@@ -135,7 +138,7 @@ input:focus, select:focus { border-color: var(--p); background: #f8fafc; }
 <button id="navM" onclick="renderHome()">МЕНЮ</button>
 <button id="navB" onclick="goBack()">НАЗАД</button>
 </div>
-<div id="mdl" class="modal"><div class="modal-box"><div style="display:flex;justify-content:space-between;padding:15px;border-bottom:1px solid #eee"><h4 id="mT" style="margin:0;font-size:16px"></h4><button onclick="closeModal()" style="border:none;background:none;font-size:24px;color:#999">✕</button></div><div id="mB" class="modal-body"></div></div></div>
+<div id="mdl" class="modal"><div class="modal-box"><div style="display:flex;justify-content:space-between;padding:15px;border-bottom:1px solid #eee"><h4 id="mT" style="margin:0;font-size:16px;font-weight:900;color:#1e293b"></h4><button onclick="closeModal()" style="border:none;background:none;font-size:24px;color:#999">✕</button></div><div id="mB" class="modal-body"></div></div></div>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -165,6 +168,10 @@ const db=firebase.database().ref('production'),auth=firebase.auth();
 
 let cur='Home',data={},aId=null,archSub='',corrMode=false,isLogged=false;
 let corrCtx = {}; 
+// ПЕРЕМЕННАЯ ДЛЯ КНОПКИ СТРЕЙЧА
+let useStretch = false;
+
+const stockCatsAll = ['Stock_DV', 'Stock_Semi', 'Stock_Feed', 'Stock_Raw', 'WeightStock', 'Готовая', 'Пакеты', 'Пленка', 'Скотч 360 грамм', 'Мешки', 'Нитки', 'Этикетка', 'Стрейч пленка', 'Термо лента'];
 
 window.delRec = async function(cat, id) {
     if(!confirm('Удалить эту запись навсегда?')) return;
@@ -176,8 +183,7 @@ window.delInvoiceFull = async function(cat, id) {
     if(!confirm('Удалить накладную и отменить связанные движения товара по всем складам?')) return;
     const updates = {};
     updates[`/${cat}/${id}`] = null; 
-    const stockCats = ['Stock_DV', 'Stock_Semi', 'Stock_Feed', 'Stock_Raw', 'WeightStock', 'Готовая', 'Пакеты', 'Пленка', 'Скотч 360 грамм', 'Мешки', 'Нитки', 'Этикетка'];
-    stockCats.forEach(sc => {
+    stockCatsAll.forEach(sc => {
         if(data[sc]) {
             Object.entries(data[sc]).forEach(([key, val]) => {
                 if(val.fLink === id) updates[`/${sc}/${key}`] = null; 
@@ -191,8 +197,7 @@ window.delWorkshopReportFull = async function(dbName, id) {
     if(!confirm('Удалить отчет производства и вернуть все материалы/продукцию на склад?')) return;
     const updates = {};
     updates[`/${dbName}/${id}`] = null; 
-    const stockCats = ['Stock_DV', 'Stock_Semi', 'Stock_Feed', 'Stock_Raw', 'WeightStock', 'Готовая', 'Пакеты', 'Пленка', 'Скотч 360 грамм', 'Мешки', 'Нитки', 'Этикетка'];
-    stockCats.forEach(sc => {
+    stockCatsAll.forEach(sc => {
         if(data[sc]) {
             Object.entries(data[sc]).forEach(([key, val]) => {
                 if(val.fLink === id) updates[`/${sc}/${key}`] = null; 
@@ -206,8 +211,7 @@ window.delFasFull = async function(id) {
     if(!confirm('Удалить отчет фасовки?')) return;
     const updates = {};
     updates['/Фасовка/'+id] = null;
-    const stockCats = ['WeightStock','Stock_DV','Готовая','Пакеты','Пленка','Скотч 360 грамм'];
-    stockCats.forEach(cat => {
+    stockCatsAll.forEach(cat => {
         if(data[cat]) {
             Object.entries(data[cat]).forEach(([key, val]) => {
                 if(val.fLink === id) updates[`/${cat}/${key}`] = null; 
@@ -250,7 +254,7 @@ function renderHome(){
     </div>`;
     updNav();
 }
-function goBack(){const m={'StockList':'StockRoot','WeightStock':'StockRoot','Stock_DV':'StockRoot','Stock_Feed':'StockRoot','Stock_Semi':'StockRoot','Stock_Raw':'StockRoot','Invoices':'StockRoot','PackSub':'StockRoot','ArchSubIn':'Invoices','ArchSubOut':'Invoices','InvoicesDate':'ArchSub','InvoicesClient':'ArchSub','Фасовка':'ProdSub','Kruporushka':'ProdSub','ZSHM':'ProdSub','Vibro':'ProdSub','Пленка':'PackSub','Пакеты':'PackSub','Скотч 360 грамм':'PackSub','Мешки':'PackSub','Нитки':'PackSub','Этикетка':'PackSub','ArchPackIn':'PackSub','Consolidated':'Home'};let next=m[cur]||'Home';if(cur==='InvoicesDate'||cur==='InvoicesClient')next=archSub==='In'?'ArchSubIn':'ArchSubOut';setCat(next);}
+function goBack(){const m={'StockList':'StockRoot','WeightStock':'StockRoot','Stock_DV':'StockRoot','Stock_Feed':'StockRoot','Stock_Semi':'StockRoot','Stock_Raw':'StockRoot','Invoices':'StockRoot','PackSub':'StockRoot','ArchSubIn':'Invoices','ArchSubOut':'Invoices','InvoicesDate':'ArchSub','InvoicesClient':'ArchSub','Фасовка':'ProdSub','Kruporushka':'ProdSub','ZSHM':'ProdSub','Vibro':'ProdSub','Пленка':'PackSub','Пакеты':'PackSub','Скотч 360 грамм':'PackSub','Мешки':'PackSub','Нитки':'PackSub','Этикетка':'PackSub','Стрейч пленка':'PackSub','Термо лента':'PackSub','ArchPackIn':'PackSub','Consolidated':'Home'};let next=m[cur]||'Home';if(cur==='InvoicesDate'||cur==='InvoicesClient')next=archSub==='In'?'ArchSubIn':'ArchSubOut';setCat(next);}
 
 function setCat(c){
     cur=c;
@@ -280,7 +284,7 @@ function setCat(c){
     }
     else if(c==='PackSub'){
         a.innerHTML=`<button class="btn-main" style="background:var(--s)" onclick="openModal('addMatPack')">Приход упаковки</button>`;
-        ct.innerHTML=`<div class="dash-grid"><div class="dash-item" onclick="setCat('Пленка')">ПЛЕНКА</div><div class="dash-item" onclick="setCat('Пакеты')">ПАКЕТЫ</div><div class="dash-item" onclick="setCat('Скотч 360 грамм')">СКОТЧ</div><div class="dash-item" onclick="setCat('Мешки')">МЕШКИ</div><div class="dash-item" onclick="setCat('Нитки')">НИТКИ</div><div class="dash-item" onclick="setCat('Этикетка')">ЭТИКЕТКА</div></div>`;
+        ct.innerHTML=`<div class="dash-grid"><div class="dash-item" onclick="setCat('Пленка')">ПЛЕНКА</div><div class="dash-item" onclick="setCat('Пакеты')">ПАКЕТЫ</div><div class="dash-item" onclick="setCat('Скотч 360 грамм')">СКОТЧ</div><div class="dash-item" onclick="setCat('Мешки')">МЕШКИ</div><div class="dash-item" onclick="setCat('Нитки')">НИТКИ</div><div class="dash-item" onclick="setCat('Этикетка')">ЭТИКЕТКА</div><div class="dash-item" onclick="setCat('Стрейч пленка')">СТРЕЙЧ ПЛЕНКА</div><div class="dash-item" onclick="setCat('Термо лента')">ТЕРМО ЛЕНТА</div></div>`;
     }
     else if(c==='ProdSub')ct.innerHTML=`<div class="dash-grid"><div class="dash-item" onclick="setCat('Фасовка')">Цех фасовки</div><div class="dash-item" onclick="setCat('Kruporushka')">Крупорушка</div><div class="dash-item" onclick="setCat('ZSHM')">ЗШМ</div><div class="dash-item" onclick="setCat('Vibro')">Вибростол</div></div><button class="btn-main" style="background:var(--s);margin-top:10px" onclick="openModal('addRaw')">ПРИХОД СЫРЬЯ</button>`;
     else if(c==='Фасовка')a.innerHTML=`<button class="btn-main" style="background:var(--p)" onclick="openModal('fas')">НОВАЯ ЗАПИСЬ</button>`;
@@ -331,10 +335,9 @@ function rConsolidated(c) {
     const drawSection = (title, dataObj, unit, color) => {
         let items = Object.keys(dataObj).filter(k => Math.abs(dataObj[k]) > 0.1).sort();
         if(items.length === 0) return '';
-        let h = `<div class="z-head" style="background:${color};color:#333;border:1px solid #ddd">${title}</div><div class="item-grid" style="grid-template-columns:1fr 1fr;">`;
+        let h = `<div class="z-head" style="background:${color};color:#1e293b;border:1px solid #cbd5e1">${title}</div><div class="item-grid" style="grid-template-columns:1fr 1fr;">`;
         items.forEach(k => {
             let val = dataObj[k];
-            // ФИКС ОТОБРАЖЕНИЯ ПЛЕНКИ
             let displayVal = Math.round(val);
             if (title.includes('ПЛЕНКА')) displayVal = val.toFixed(2);
             
@@ -359,8 +362,10 @@ function rConsolidated(c) {
     let sacks = sumCat(['Мешки']); h += drawSection('💰 МЕШКИ', sacks, 'шт', '#f1f5f9');
     let thread = sumCat(['Нитки']); h += drawSection('🧵 НИТКИ', thread, 'шт', '#f1f5f9');
     let label = sumCat(['Этикетка']); h += drawSection('🏷️ ЭТИКЕТКА', label, 'шт', '#f1f5f9');
+    let stretch = sumCat(['Стрейч пленка']); h += drawSection('🌀 СТРЕЙЧ', stretch, 'шт', '#f1f5f9');
+    let thermo = sumCat(['Термо лента']); h += drawSection('🔥 ТЕРМО ЛЕНТА', thermo, 'шт', '#f1f5f9');
     h += '</div>';
-    // НОВАЯ КНОПКА АРХИВАЦИИ
+    
     h += `<div style="margin-top:15px;border-top:1px dashed #ccc;padding-top:15px;display:grid;grid-template-columns:1fr 1fr;gap:5px">
         <button class="btn-main" onclick="openModal('fixBal')" style="background:#f59e0b;color:#fff;border:1px solid #d97706;font-size:10px">🔒 ЗАФИКСИРОВАТЬ</button>
         <button class="btn-main" onclick="openModal('archiveOld')" style="background:#dc2626;color:#fff;border:1px solid #b91c1c;font-size:10px">🧹 СВЕРТКА БАЗЫ</button>
@@ -402,9 +407,8 @@ function renderByTiles(c, rawD, type) {
              h+=`<div id="m${y}${m}${type}" class="arch-content" style="grid-column:1/-1;">`;
              gr[y][m].sort((a,b)=>(b.date+b.ts).localeCompare(a.date+a.ts)).forEach(v => {
                 if(type==='FAS') {
-                    // НОВЫЙ ФОРМАТ ОТЧЕТА (КАК В ЗАДАНИИ)
+                    // ФАСОВКА - ЦВЕТА ИСПРАВЛЕНЫ
                     let nameTitle = v.name ? v.name.toUpperCase() : "ФАСОВКА";
-                    // Если есть список выхода, берем имя оттуда для заголовка
                     if(v.outputItems && v.outputItems.length > 0) {
                         nameTitle = (v.outputItems.length > 1) ? `ФАСОВКА` : v.outputItems[0].name.toUpperCase();
                     }
@@ -412,32 +416,31 @@ function renderByTiles(c, rawD, type) {
                     h+=`<div class="card" style="padding-top:5px;padding-bottom:5px"><button class="del-rep-btn" onclick="event.stopPropagation();delFasFull('${v.id}')">🗑️</button>
                     <div style="text-align:center;font-weight:900;border-bottom:1px solid #000;margin-bottom:5px;padding-bottom:5px;font-size:14px;color:#000">${nameTitle} ${fd2(v.date)}</div>`;
                     
-                    // СЫРЬЕ
                     h+=`<div style="font-weight:700;font-size:12px;color:#000;margin-bottom:2px">сырьё:</div>`;
                     if(v.items) {
                         v.items.forEach(i => {
-                             let srcLbl = (i.source === 'WeightStock') ? '<span style="color:#059669;font-size:9px;margin-left:2px">(пок)</span>' : '<span style="color:#3b82f6;font-size:9px;margin-left:2px">(ДВ)</span>';
-                             h+=`<div class="j-row" style="margin:0"><span class="j-dots">${i.name} ${srcLbl}</span><span class="j-val" style="color:#000">-${i.amount}кг</span></div>`;
+                             let srcLbl = (i.source === 'WeightStock') ? '<span style="color:var(--s);font-size:9px;margin-left:2px">(пок)</span>' : '<span style="color:var(--p);font-size:9px;margin-left:2px">(ДВ)</span>';
+                             // Расход сырья - красный
+                             h+=`<div class="j-row" style="margin:0"><span class="j-dots">${i.name} ${srcLbl}</span><span class="j-val val-neg">-${i.amount}кг</span></div>`;
                         });
                     } else {
-                        h+=`<div class="j-row"><span class="j-dots">${v.rawItem}</span><span class="j-val">-${v.prihod}кг</span></div>`;
+                        h+=`<div class="j-row"><span class="j-dots">${v.rawItem}</span><span class="j-val val-neg">-${v.prihod}кг</span></div>`;
                     }
 
                     h+=`<div style="border-bottom:1px dashed #000;margin:5px 0"></div>`;
 
-                    // ПРОДУКЦИЯ (ВЫХОД)
                     h+=`<div style="font-weight:700;font-size:12px;color:#000;margin-bottom:2px">Выход:</div>`;
                     if(v.outputItems) {
                          v.outputItems.forEach(o => {
-                             h+=`<div class="j-row" style="margin:0"><span class="j-dots">${o.name}</span><span class="j-val" style="color:#000">+${o.count}шт</span></div>`;
+                             // Приход продукции - синий
+                             h+=`<div class="j-row" style="margin:0"><span class="j-dots">${o.name}</span><span class="j-val val-pos">+${o.count}шт</span></div>`;
                          });
                     } else {
-                         h+=`<div class="j-row"><span class="j-dots">${v.name}</span><span class="j-val">+${v.vyhod}шт</span></div>`;
+                         h+=`<div class="j-row"><span class="j-dots">${v.name}</span><span class="j-val val-pos">+${v.vyhod}шт</span></div>`;
                     }
 
                     h+=`<div style="border-bottom:1px dashed #000;margin:5px 0"></div>`;
 
-                    // УПАКОВКА
                     let packList = [];
                     if(v.outputItems) {
                         v.outputItems.forEach(o => packList.push({n: `Пакеты ${o.size}`, v: Math.round(o.count / ((o.name==="Кутя")?19.8:9.9))}));
@@ -446,20 +449,55 @@ function renderByTiles(c, rawD, type) {
                     }
                     
                     packList.forEach(p => {
-                        h+=`<div class="j-row" style="margin:0"><span class="j-dots">${p.n}</span><span class="j-val" style="color:#000">-${p.v}шт</span></div>`;
+                        h+=`<div class="j-row" style="margin:0"><span class="j-dots">${p.n}</span><span class="j-val val-neg">-${p.v}шт</span></div>`;
                     });
                     
                     let plVal = v.vzial ? Math.abs(v.vzial - (v.ostatok||0)).toFixed(2) : '0';
-                    // ПЛЕНКА: берем сохраненное имя или вычисляем из выхода
                     let fNameDisp = (v.filmName) ? v.filmName : (v.outputItems && v.outputItems.length > 0 ? v.outputItems[0].name : 'Пленка');
-                    h+=`<div class="j-row" style="margin:0"><span class="j-dots">${fNameDisp}</span><span class="j-val" style="color:#000">-${plVal}кг</span></div>`;
-                    h+=`<div class="j-row" style="margin:0"><span class="j-dots">Скотч</span><span class="j-val" style="color:#000">-${v.scotch||0}шт</span></div>`;
+                    let finalFilmName = fNameDisp.toLowerCase().includes('пленка') ? fNameDisp : 'Пленка ' + fNameDisp;
+                    h+=`<div class="j-row" style="margin:0"><span class="j-dots">${finalFilmName}</span><span class="j-val val-neg">-${plVal}кг</span></div>`;
+                    h+=`<div class="j-row" style="margin:0"><span class="j-dots">Скотч</span><span class="j-val val-neg">-${v.scotch||0}шт</span></div>`;
                     
                     h+=`</div>`;
                 }
                 else if(type==='KRUP' || type==='VIBRO' || type==='ZSHM') {
                     let ts = (v.timeStart||'??') + ' — ' + (v.timeEnd||'??');
-                    h+=`<div class="card"><button class="del-rep-btn" onclick="event.stopPropagation();delWorkshopReportFull('${WS_CFG[type].db}', '${v.id}')">🗑️</button><b>${WS_CFG[type].title}</b> [${fd2(v.date)}]` + `<div style="font-size:11px;color:#333;margin-bottom:5px;font-weight:bold">🕑 ${ts}</div>` + `<div style="font-size:11px;color:#333;margin-bottom:5px">👤 ${v.operator||'-'} / ${v.assistant||'-'}</div>` + `<div style="font-size:11px;color:#64748b">${v.rawMix}</div><hr style="opacity:0.2">` + v.items.map(i=>`<div class="report-line"><span>${i.n}</span><b>${i.q}м [${i.w}кг]</b></div>`).join('') + `</div>`;
+                    
+                    // РАСЧЕТ СПИСАНИЯ ДЛЯ ОТОБРАЖЕНИЯ
+                    let totalBags = 0;
+                    let labelsMap = {};
+                    if(v.items) {
+                        v.items.forEach(i => {
+                            totalBags += i.q;
+                            if (i.w === 25) {
+                                let nLow = i.n.toLowerCase();
+                                let labelName = null;
+                                if (!nLow.includes('арнаутка 3')) {
+                                    if (nLow.includes('арнаутка')) labelName = 'Эт-ка Арнаутка';
+                                    else if (nLow.includes('ячка')) labelName = 'Эт-ка Ячка';
+                                    else if (nLow.includes('пшеничка')) labelName = 'Эт-ка Пшеничка';
+                                    else if (nLow.includes('перловка')) labelName = 'Эт-ка Перловка';
+                                    else if (nLow.includes('горох')) labelName = 'Эт-ка Горох';
+                                    else if (nLow.includes('пшоно')) labelName = 'Эт-ка Пшоно';
+                                    else if (nLow.includes('кукуруза')) labelName = 'Эт-ка Кукуруза';
+                                }
+                                if (labelName) {
+                                    labelsMap[labelName] = (labelsMap[labelName] || 0) + i.q;
+                                }
+                            }
+                        });
+                    }
+                    
+                    let bagsHtml = totalBags > 0 ? `<div class="report-line"><span>Мешки</span><b class="val-neg">-${totalBags}шт</b></div>` : '';
+                    let labelsHtml = '';
+                    Object.keys(labelsMap).forEach(k => {
+                        labelsHtml += `<div class="report-line"><span>${k}</span><b class="val-neg">-${labelsMap[k]}шт</b></div>`;
+                    });
+
+                    h+=`<div class="card"><button class="del-rep-btn" onclick="event.stopPropagation();delWorkshopReportFull('${WS_CFG[type].db}', '${v.id}')">🗑️</button><b>${WS_CFG[type].title}</b> [${fd2(v.date)}]` + `<div style="font-size:11px;color:#333;margin-bottom:5px;font-weight:bold">🕑 ${ts}</div>` + `<div style="font-size:11px;color:#333;margin-bottom:5px">👤 ${v.operator||'-'} / ${v.assistant||'-'}</div>` + `<div style="font-size:11px;color:#64748b">${v.rawMix}</div><hr style="opacity:0.2">` + v.items.map(i=>{
+                        let rest = i.l ? ` <span style="color:#d97706;font-weight:bold">+ ${i.l}кг</span>` : '';
+                        return `<div class="report-line"><span>${i.n}</span><div style="text-align:right"><b class="val-pos">${i.q}м × ${i.w}кг</b>${rest}</div></div>`;
+                    }).join('') + bagsHtml + labelsHtml + `</div>`;
                 }
              });
              h+=`</div>`;
@@ -476,10 +514,10 @@ function rFas(c) { renderByTiles(c, data.Фасовка, 'FAS'); }
 function rKrup(c) { renderByTiles(c, data.Krup_Report, 'KRUP'); }
 function rVibro(c) { renderByTiles(c, data.Vibro_Report, 'VIBRO'); }
 function rZSHM(c) { renderByTiles(c, data.ZSHM_Report, 'ZSHM'); }
-function rArchPack(c){ const d = data.ArchPackIn || {}; const gr = {}; if(d) Object.entries(d).forEach(([id,v])=>{ if(!v.date) return; const dObj = new Date(v.date); const y = dObj.getFullYear(), m = dObj.getMonth(), dy = dObj.getDate(); if(!gr[y]) gr[y] = {}; if(!gr[y][m]) gr[y][m] = []; gr[y][m].push({...v, id}); }); let h=''; Object.keys(gr).sort((a,b)=>b-a).forEach(y=>{ h+=`<div class="arch-y-grid"><div class="arch-tile-y" onclick="toggleF('py${y}')">${y}</div></div><div id="py${y}" class="arch-content">`; h+=`<div class="arch-m-grid">`;Object.keys(gr[y]).sort((a,b)=>b-a).forEach(m=>{ h+=`<div class="arch-tile-m" onclick="toggleF('pm${y}${m}')">${mths[m]}</div>`; }); h+=`</div>`; Object.keys(gr[y]).sort((a,b)=>b-a).forEach(m=>{ h+=`<div id="pm${y}${m}" class="arch-content">`; gr[y][m].sort((a,b)=>(b.date+b.ts).localeCompare(a.date+a.ts)).forEach(v=>{ h+=`<div class="arch-inv"><div><b>${(v.num||'Б/Н')}</b>${v.name} (${v.amount}кг)</div><div style="font-size:10px;color:#888">${v.supplier||'-'}</div></div>`; }); h+=`</div>`; }); h+=`</div>`; }); c.innerHTML=h||'Пусто'; }
-function rWH(c){const t={};gP('Готовая').forEach(p=>t[p]=0);if(data.Готовая)Object.values(data.Готовая).forEach(v=>t[v.name]+=v.amount);let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(n=>{h+=`<div class="item-card ${t[n]<0?'alarm-blink':''}"><div class="item-title">${n}</div><div class="item-qty">${Math.round(t[n])}</div><button class="history-btn" onclick="showH('Готовая','${n}')">📜</button><button class="corr-btn" onclick="openModal('corr','Готовая','${n}')">±</button></div>`;});c.innerHTML=h+'</div>';}
-function rWgh(c){const t={};gP('WeightStock').forEach(p=>t[p]=0);if(data.WeightStock)Object.values(data.WeightStock).forEach(v=>t[v.name]+=v.amount);let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(n=>{h+=`<div class="item-card ${t[n]<0?'alarm-blink':''}"><div class="item-title">${n}</div><div class="item-qty">${Math.round(t[n])}</div><button class="history-btn" onclick="showH('WeightStock','${n}')">📜</button><button class="corr-btn" onclick="openModal('corr','WeightStock','${n}')">±</button></div>`;});c.innerHTML=h+'</div>';}
-function rRaw(c){const t={};gP('Stock_Raw').forEach(p=>t[p]=0);if(data.Stock_Raw)Object.values(data.Stock_Raw).forEach(v=>t[v.name]+=v.amount);let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(n=>{h+=`<div class="item-card ${t[n]<0?'alarm-blink':''}"><div class="item-title">${n}</div><div class="item-qty">${Math.round(t[n])}</div><button class="history-btn" onclick="showH('Stock_Raw','${n}')">📜</button><button class="corr-btn" onclick="openModal('corr','Stock_Raw','${n}')">±</button></div>`;});c.innerHTML=h+'</div>';}
+function rArchPack(c){ const d = data.ArchPackIn || {}; const gr = {}; if(d) Object.entries(d).forEach(([id,v])=>{ if(!v.date) return; const dObj = new Date(v.date); const y = dObj.getFullYear(), m = dObj.getMonth(), dy = dObj.getDate(); if(!gr[y]) gr[y] = {}; if(!gr[y][m]) gr[y][m] = []; gr[y][m].push({...v, id}); }); let h=''; Object.keys(gr).sort((a,b)=>b-a).forEach(y=>{ h+=`<div class="arch-y-grid"><div class="arch-tile-y" onclick="toggleF('py${y}')">${y}</div></div><div id="py${y}" class="arch-content">`; h+=`<div class="arch-m-grid">`;Object.keys(gr[y]).sort((a,b)=>b-a).forEach(m=>{ h+=`<div class="arch-tile-m" onclick="toggleF('pm${y}${m}')">${mths[m]}</div>`; }); h+=`</div>`; Object.keys(gr[y]).sort((a,b)=>b-a).forEach(m=>{ h+=`<div id="pm${y}${m}" class="arch-content">`; gr[y][m].sort((a,b)=>(b.date+b.ts).localeCompare(a.date+a.ts)).forEach(v=>{ h+=`<div class="arch-inv"><div><b>${(v.num||'Б/Н')}</b>${v.name} (<span class="val-pos">+${v.amount} ${v.category==='Пленка'?'кг':'шт'}</span>)</div><div style="font-size:10px;color:#888">${v.supplier||'-'}</div></div>`; }); h+=`</div>`; }); h+=`</div>`; }); c.innerHTML=h||'Пусто'; }
+function rWH(c){const t={};gP('Готовая').forEach(p=>t[p]=0);if(data.Готовая)Object.values(data.Готовая).forEach(v=>t[v.name]+=v.amount);let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(n=>{h+=`<div class="item-card ${t[n]<0?'alarm-blink':''}"><div class="item-title">${n}</div><div class="item-qty ${t[n]>=0?'val-pos':'val-neg'}">${Math.round(t[n])}</div><button class="history-btn" onclick="showH('Готовая','${n}')">📜</button><button class="corr-btn" onclick="openModal('corr','Готовая','${n}')">±</button></div>`;});c.innerHTML=h+'</div>';}
+function rWgh(c){const t={};gP('WeightStock').forEach(p=>t[p]=0);if(data.WeightStock)Object.values(data.WeightStock).forEach(v=>t[v.name]+=v.amount);let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(n=>{h+=`<div class="item-card ${t[n]<0?'alarm-blink':''}"><div class="item-title">${n}</div><div class="item-qty ${t[n]>=0?'val-pos':'val-neg'}">${Math.round(t[n])}</div><button class="history-btn" onclick="showH('WeightStock','${n}')">📜</button><button class="corr-btn" onclick="openModal('corr','WeightStock','${n}')">±</button></div>`;});c.innerHTML=h+'</div>';}
+function rRaw(c){const t={};gP('Stock_Raw').forEach(p=>t[p]=0);if(data.Stock_Raw)Object.values(data.Stock_Raw).forEach(v=>t[v.name]+=v.amount);let h=`<div class="item-grid ${corrMode?'show-corr':''}">`;Object.keys(t).sort().forEach(n=>{h+=`<div class="item-card ${t[n]<0?'alarm-blink':''}"><div class="item-title">${n}</div><div class="item-qty ${t[n]>=0?'val-pos':'val-neg'}">${Math.round(t[n])}</div><button class="history-btn" onclick="showH('Stock_Raw','${n}')">📜</button><button class="corr-btn" onclick="openModal('corr','Stock_Raw','${n}')">±</button></div>`;});c.innerHTML=h+'</div>';}
 
 function rGen(c){
     const d=data[cur]||{},t={};
@@ -491,18 +529,20 @@ function rGen(c){
         if(cur==='Пленка'&&val<50)alarm=true;
         if(cur==='Скотч 360 грамм'&&val<30)alarm=true;
         if(cur==='Пакеты'&&val<3000)alarm=true;
+        if(cur==='Стрейч пленка'&&val<5)alarm=true;
+        if(cur==='Термо лента'&&val<5)alarm=true;
         
         let unit = 'кг';
         let dispVal = Math.round(val);
 
-        if(cur === 'Скотч 360 грамм' || cur === 'Пакеты' || cur === 'Мешки' || cur === 'Нитки' || cur === 'Этикетка') {
+        if(cur === 'Скотч 360 грамм' || cur === 'Пакеты' || cur === 'Мешки' || cur === 'Нитки' || cur === 'Этикетка' || cur === 'Стрейч пленка' || cur === 'Термо лента') {
             unit = 'шт';
         }
 
         if(cur === 'Скотч 360 грамм') { dispVal = val.toFixed(1); }
         if(cur === 'Пленка') { dispVal = val.toFixed(2); unit = 'кг'; }
 
-        h+=`<div class="item-card ${alarm?'alarm-blink':''}"><div class="item-title">${k}</div><div class="item-qty">${dispVal} <small style="font-size:10px">${unit}</small></div><button class="history-btn" onclick="showH('${cur}','${k}')">📜</button><button class="corr-btn" onclick="openModal('corr','${cur}','${k}')">±</button></div>`;
+        h+=`<div class="item-card ${alarm?'alarm-blink':''}"><div class="item-title">${k}</div><div class="item-qty ${val>=0?'val-pos':'val-neg'}">${dispVal} <small style="font-size:10px">${unit}</small></div><button class="history-btn" onclick="showH('${cur}','${k}')">📜</button><button class="corr-btn" onclick="openModal('corr','${cur}','${k}')">±</button></div>`;
     });
     c.innerHTML=h+'</div>';
 }
@@ -562,12 +602,15 @@ function renderHistRow(c, v, isTable=false) {
             ${corrMode ? `<button onclick="delRec('${c}','${v.id}')" style="border:none;background:none;font-size:14px;margin-left:5px">🗑️</button>` : ''}
         </div>`;
     }
+    // ДОБАВЛЕН ЗНАК ПЛЮСА
+    const plusSign = v.a > 0 ? '+' : '';
+    
     const html = `<div style="padding:8px 0;width:60%">
             <div style="font-weight:600;color:#1e293b;font-size:13px">${v.n}</div>
             <div style="font-size:10px;color:#94a3b8">${fd2(v.d)}</div>
         </div>
         <div style="text-align:right;font-weight:800;font-size:14px;width:30%" class="${v.a >= 0 ? 'hist-pos' : 'hist-neg'}">
-            ${c === 'Пакеты' ? Math.round(v.a) : v.a.toFixed(1)}
+            ${plusSign}${c === 'Пакеты' || c === 'Стрейч пленка' || c === 'Термо лента' ? Math.round(v.a) : v.a.toFixed(1)}
         </div>
         <div style="width:30px;text-align:center">
             ${corrMode ? `<button onclick="delRec('${c}','${v.id}')" style="border:none;background:none;font-size:16px;color:red">🗑️</button>` : ''}
@@ -579,12 +622,11 @@ async function sFixBal() {
     const dVal = document.getElementById('fixDate').value;
     if(!dVal) return alert('Выберите дату!');
     const dStart = dVal + "T00:00:00.000Z";
-    const cats = ['Stock_DV', 'Stock_Semi', 'Stock_Feed', 'Stock_Raw', 'WeightStock', 'Готовая', 'Пакеты', 'Пленка', 'Скотч 360 грамм', 'Мешки', 'Нитки', 'Этикетка'];
     const updates = {};
     let count = 0;
     const btn = document.getElementById('btnFix');
     btn.disabled = true; btn.innerText = "СОХРАНЯЮ...";
-    cats.forEach(cat => {
+    stockCatsAll.forEach(cat => {
         if(!data[cat]) return;
         const sums = {};
         Object.values(data[cat]).forEach(v => sums[v.name] = (sums[v.name]||0) + v.amount);
@@ -610,7 +652,6 @@ async function runArchive() {
     btn.disabled = true; btn.innerText = "СЧИТАЮ И УДАЛЯЮ...";
     
     const cutoffDate = dVal + "T00:00:00.000Z";
-    const stockCats = ['Stock_DV', 'Stock_Semi', 'Stock_Feed', 'Stock_Raw', 'WeightStock', 'Готовая', 'Пакеты', 'Пленка', 'Скотч 360 грамм', 'Мешки', 'Нитки', 'Этикетка'];
     const reportCats = ['Фасовка', 'Krup_Report', 'Vibro_Report', 'ZSHM_Report', 'ArchInvoices', 'ArchIncoming', 'ArchPackIn'];
     
     const updates = {};
@@ -618,7 +659,7 @@ async function runArchive() {
     let delCount = 0;
 
     // 1. Считаем остатки и удаляем старое в складах
-    stockCats.forEach(cat => {
+    stockCatsAll.forEach(cat => {
         if (!data[cat]) return;
         const sums = {};
         
@@ -635,7 +676,6 @@ async function runArchive() {
             const amount = sums[name];
             if (Math.abs(amount) > 0.01) {
                 const key = db.child(cat).push().key;
-                // Ставим дату свертки + 1 миллисекунда, чтобы они были "после" удаления
                 updates[`/${cat}/${key}`] = { 
                     name: name, 
                     amount: amount, 
@@ -649,7 +689,7 @@ async function runArchive() {
         });
     });
 
-    // 2. Просто удаляем старые отчеты (они не влияют на остаток, он уже посчитан выше)
+    // 2. Удаляем старые отчеты
     reportCats.forEach(cat => {
         if (!data[cat]) return;
         Object.entries(data[cat]).forEach(([key, v]) => {
@@ -829,12 +869,17 @@ function openModal(t, a1, a2){
     }
     else if(t==='addMatPack'){
         ti.innerText='ПРИХОД УПАКОВКИ';
-        b.innerHTML=`<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:5px"><div><label class="l-t">ДАТА</label><input type="date" id="pD" value="${td}"></div><div><label class="l-t">№ НАКЛ</label><input type="text" id="pNum" placeholder="№"></div></div><div style="margin-bottom:5px"><label class="l-t">ПОСТАВЩИК</label>${makeSelect('pS','ArchPackIn','Поставщик',gPackS(),'+ НОВЫЙ')}</div><div style="margin-bottom:5px"><label class="l-t">СКЛАД ПРИЕМА</label><select id="pCat" onchange="updPackList()"><option value="Пакеты">Пакеты</option><option value="Пленка">Пленка</option><option value="Скотч 360 грамм">Скотч</option><option value="Мешки">Мешки</option><option value="Нитки">Нитки</option><option value="Этикетка">Этикетка</option></select></div><div style="margin-bottom:5px"><label class="l-t">ПРОДУКЦИЯ</label><div id="pProdCont"></div></div><div style="margin-bottom:15px"><label class="l-t" id="pALbl">КОЛИЧЕСТВО (ШТ)</label><input type="number" id="pA" placeholder="0"></div><button class="btn-main" style="margin-top:10px;background:var(--s)" onclick="sPack()">ПРИНЯТЬ</button>`;
+        b.innerHTML=`<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:5px"><div><label class="l-t">ДАТА</label><input type="date" id="pD" value="${td}"></div><div><label class="l-t">№ НАКЛ</label><input type="text" id="pNum" placeholder="№"></div></div><div style="margin-bottom:5px"><label class="l-t">ПОСТАВЩИК</label>${makeSelect('pS','ArchPackIn','Поставщик',gPackS(),'+ НОВЫЙ')}</div><div style="margin-bottom:5px"><label class="l-t">СКЛАД ПРИЕМА</label><select id="pCat" onchange="updPackList()"><option value="Пакеты">Пакеты</option><option value="Пленка">Пленка</option><option value="Скотч 360 грамм">Скотч</option><option value="Мешки">Мешки</option><option value="Нитки">Нитки</option><option value="Этикетка">Этикетка</option><option value="Стрейч пленка">Стрейч пленка</option><option value="Термо лента">Термо лента</option></select></div><div style="margin-bottom:5px"><label class="l-t">ПРОДУКЦИЯ</label><div id="pProdCont"></div></div><div style="margin-bottom:15px"><label class="l-t" id="pALbl">КОЛИЧЕСТВО (ШТ)</label><input type="number" id="pA" placeholder="0"></div><button class="btn-main" style="margin-top:10px;background:var(--s)" onclick="sPack()">ПРИНЯТЬ</button>`;
         setTimeout(updPackList, 100);
     }
     else if(t==='ship'){
+        useStretch = false; // СБРОС СТРЕЙЧА ПРИ ОТКРЫТИИ
         ti.innerText='ОТГРУЗКА СО СКЛАДА';
-        b.innerHTML=`<div class="grid" style="grid-template-columns:2fr 1fr"><div class="col"><label class="lt">ДАТА</label><input type="date" id="hD" value="${td}"></div><div class="col"><label class="lt">№ НАКЛ</label><input type="text" id="hNum" placeholder="№"></div></div><div style="margin:5px 0"><label class="lt">КЛИЕНТ</label>${makeSelect('hC', 'ArchInvoices', 'Клиент', gCl(), '+ НОВЫЙ')}</div><div class="z-head">ОТКУДА ГРУЗИМ:</div><div class="dash-grid" style="margin-bottom:10px;grid-template-columns:1fr 1fr"><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Готовая')">ФАСОВКА</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('WeightStock')">ПОКУПНАЯ</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Stock_DV')">ДВ</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Stock_Feed')">КОРМА</button></div><div id="shpR"></div><button class="btn-main" id="btnS" onclick="sShip()" style="margin-top:15px;background:var(--d)">ОТГРУЗИТЬ</button>`;
+        b.innerHTML=`<div class="grid" style="grid-template-columns:2fr 1fr"><div class="col"><label class="lt">ДАТА</label><input type="date" id="hD" value="${td}"></div><div class="col"><label class="lt">№ НАКЛ</label><input type="text" id="hNum" placeholder="№"></div></div><div style="margin:5px 0"><label class="lt">КЛИЕНТ</label>${makeSelect('hC', 'ArchInvoices', 'Клиент', gCl(), '+ НОВЫЙ')}</div><div class="z-head">ОТКУДА ГРУЗИМ:</div><div class="dash-grid" style="margin-bottom:10px;grid-template-columns:1fr 1fr"><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Готовая')">ФАСОВКА</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('WeightStock')">ПОКУПНАЯ</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Stock_DV')">ДВ</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Stock_Feed')">КОРМА</button></div><div id="shpR"></div>
+        <div style="margin-top:10px;border-top:1px dashed #cbd5e1;padding-top:10px">
+            <button id="btnStr" class="btn-main" onclick="toggleStr(this)" style="background:#f1f5f9;color:#333;border:1px solid #cbd5e1">СТРЕЙЧ: НЕТ</button>
+        </div>
+        <button class="btn-main" id="btnS" onclick="sShip()" style="margin-top:15px;background:var(--d)">ОТГРУЗИТЬ</button>`;
     }
     else if(t==='fixBal') { ti.innerText='Фиксация остатков'; b.innerHTML=`<p style="font-size:12px;color:#666">Зафиксировать текущие остатки как "Входящий остаток" на начало выбранного дня?</p><input type="date" id="fixDate" value="${td}"><button class="btn-main" id="btnFix" onclick="sFixBal()" style="background:#f59e0b">СОХРАНИТЬ МЕТКУ</button>`; }
     else if(t==='dayRep') { 
@@ -855,6 +900,19 @@ function openModal(t, a1, a2){
         `;
     }
     document.getElementById('mdl').style.display='flex';
+}
+
+function toggleStr(btn) {
+    useStretch = !useStretch;
+    if(useStretch) {
+        btn.style.background = 'var(--p)';
+        btn.style.color = '#fff';
+        btn.innerText = 'СТРЕЙЧ: ДА (АВТО)';
+    } else {
+        btn.style.background = '#f1f5f9';
+        btn.style.color = '#333';
+        btn.innerText = 'СТРЕЙЧ: НЕТ';
+    }
 }
 
 window.updPackList = function() {
@@ -941,7 +999,6 @@ function genDayReport() {
     const addProd = (n, a, u) => { if(!n)return; if(!rep.prod[n]) rep.prod[n]={val:0,u:u}; rep.prod[n].val += a; };
     if(data.Фасовка) Object.values(data.Фасовка).forEach(v => {
         if(v.date && v.date.startsWith(dVal)) {
-            // Поддержка мульти-сырья и маркировки
             if(v.items) {
                 v.items.forEach(i => {
                     let sLbl = (i.source==='WeightStock') ? '(пок)' : '(ДВ)';
@@ -950,7 +1007,6 @@ function genDayReport() {
             } else {
                 addUsed(v.rawItem, parseFloat(v.prihod), 'кг'); 
             }
-            // Поддержка мульти-выхода
             if(v.outputItems) {
                 v.outputItems.forEach(o => {
                     addProd(o.name, parseFloat(o.count), 'шт');
@@ -976,7 +1032,7 @@ function genDayReport() {
             }
         });
     });
-    const packCats = ['Пакеты', 'Пленка', 'Скотч 360 грамм', 'Мешки', 'Нитки', 'Этикетка'];
+    const packCats = ['Пакеты', 'Пленка', 'Скотч 360 грамм', 'Мешки', 'Нитки', 'Этикетка', 'Стрейч пленка', 'Термо лента'];
     packCats.forEach(cat => {
         if(data[cat]) Object.values(data[cat]).forEach(v => {
             if(v.date && v.date.startsWith(dVal) && v.amount < 0) {
@@ -987,10 +1043,11 @@ function genDayReport() {
             }
         });
     });
-    const red = (txt) => `<span style="color:#ef4444">${txt}</span>`;
+    const red = (txt) => `<span style="color:var(--red)">${txt}</span>`;
+    const blue = (txt) => `<span style="color:var(--blue)">${txt}</span>`;
     let h = `<div class="day-rep-box">Отчёт за ${dateStr}`;
     h += `<div class="dr-h">Приход:</div>`;
-    if(rep.inc.length) rep.inc.forEach(l => h += `+ ${l}\n`); else h += `-\n`;
+    if(rep.inc.length) rep.inc.forEach(l => h += blue(`+ ${l}`) + `\n`); else h += `-\n`;
     h += `<div class="dr-h">Отгружено:</div>`;
     let outKeys = Object.keys(rep.out).sort();
     if(outKeys.length) outKeys.forEach(k => h += red(`- ${k} ${parseFloat(rep.out[k].val.toFixed(1))}${rep.out[k].u}`) + `\n`); else h += `-\n`;
@@ -1002,7 +1059,7 @@ function genDayReport() {
     }); else h += `-\n`;
     h += `<div class="dr-h">Произведено:</div>`;
     let prodKeys = Object.keys(rep.prod).sort();
-    if(prodKeys.length) prodKeys.forEach(k => h += `+ ${k} ${parseFloat(rep.prod[k].val.toFixed(1))}${rep.prod[k].u}\n`); else h += `-\n`;
+    if(prodKeys.length) prodKeys.forEach(k => h += blue(`+ ${k} ${parseFloat(rep.prod[k].val.toFixed(1))}${rep.prod[k].u}`) + `\n`); else h += `-\n`;
     h += `<div class="dr-h">Упаковка:</div>`;
     let packKeys = Object.keys(rep.pack).sort();
     if(packKeys.length) packKeys.forEach(k => h += red(`- ${k} ${parseFloat(rep.pack[k].val.toFixed(1))}${rep.pack[k].u}`) + `\n`); else h += `-\n`;
@@ -1158,11 +1215,9 @@ async function saveGen(type) {
     items.forEach(i => {
         totalBagsAll += i.q;
         
-        // Логика списания мешков 25кг и этикеток
         if (i.w === 25) {
             let nLow = i.n.toLowerCase();
             
-            // Если Арнаутка 3 - пропускаем списание этикетки и мешка
             if (nLow.includes('арнаутка 3')) return;
 
             let labelName = null;
@@ -1174,7 +1229,6 @@ async function saveGen(type) {
             else if (nLow.includes('пшоно')) labelName = 'Этикетка Пшоно';
             else if (nLow.includes('кукуруза')) labelName = 'Этикетка Кукуруза';
             
-            // Если нашли совпадение, добавляем к списанию
             if (labelName) {
                 bags25ToDed += i.q;
                 labelsToDed[labelName] = (labelsToDed[labelName] || 0) + i.q;
@@ -1182,8 +1236,7 @@ async function saveGen(type) {
         }
     });
     
-    let threadDed = totalBagsAll / 1000; // 1 шт на 1000 мешков (считаем все)
-    // ---------------------------------------------
+    let threadDed = totalBagsAll / 1000; 
 
     try {
         const repId = db.child(conf.db).push().key; 
@@ -1208,7 +1261,6 @@ async function saveGen(type) {
             updates[`/${dest}/${db.child(dest).push().key}`] = { name: finalName, amount: amount, date: dV, ts: ts, note: note, fLink: repId };
         });
         
-        // ЗАПИСЬ АВТОСПИСАНИЯ
         if (bags25ToDed > 0) {
             updates['/Мешки/'+db.child('Мешки').push().key] = {name: 'Мешки', amount: -bags25ToDed, date: dV, ts: ts, note: `(авто) ${conf.title}`, fLink: repId};
         }
@@ -1248,7 +1300,6 @@ async function sFas() {
     const btn=document.getElementById('btnS');
     const d=document.getElementById('fD').value;
     
-    // Сбор мульти-сырья
     const rawItems = [];
     let totalP = 0;
     const rows = document.getElementById('fasRows').children;
@@ -1263,7 +1314,6 @@ async function sFas() {
         }
     }
 
-    // Сбор мульти-выхода
     const outItems = [];
     let totalV = 0;
     const outRows = document.getElementById('fasOutRows').children;
@@ -1281,10 +1331,8 @@ async function sFas() {
     if(rawItems.length === 0) return alert("Добавьте сырье!");
     if(outItems.length === 0) return alert("Добавьте продукцию (второе окно)!");
 
-    // === БЕРЕМ ИМЯ ПЛЕНКИ ИЗ НАЗВАНИЯ ПРОДУКЦИИ ===
     const filmName = outItems[0].name; 
-    // ============================================
-
+    
     const os=parseFloat(document.getElementById('fOs').value)||0;
     let vzStr=document.getElementById('fVz').value;
     let vzTotal = vzStr.split('+').reduce((acc, val) => { let num = parseFloat(val.replace(',', '.').trim()); return acc + (isNaN(num) ? 0 : num); }, 0);
@@ -1311,14 +1359,12 @@ async function sFas() {
             filmName: filmName // Пишем в историю
         };
 
-        // Списываем сырье
         rawItems.forEach(item => {
              updates[`/${item.source}/`+db.child(item.source).push().key]={
                  name:item.name, amount:-item.amount, date:dV, note:'Фасовка (Сырье)', fLink:fId, ts:ts
              };
         });
 
-        // Зачисляем продукцию и списываем пакеты
         outItems.forEach(item => {
              updates['/Готовая/'+db.child('Готовая').push().key]={name:item.name, amount:item.count, date:dV, note:'Фасовка', fLink:fId, ts:ts};
              
@@ -1327,9 +1373,8 @@ async function sFas() {
              updates['/Пакеты/'+db.child('Пакеты').push().key]={name:item.size, amount:sp, date:dV, note:`(авто) ${item.name}`, fLink:fId, ts:ts};
         });
 
-        // === СПИСЫВАЕМ ПЛЕНКУ ПО ИМЕНИ ПРОДУКТА ===
         updates['/Пленка/'+db.child('Пленка').push().key]={
-            name: filmName, // Имя берется из продукции
+            name: filmName, 
             amount: -plUsed, 
             date: dV, 
             note: '(авто) Фасовка', 
@@ -1363,9 +1408,13 @@ async function sShip(){
     const dV=d+"T12:00:00Z";
     if(!c) return alert('Выберите клиента');
     const its=[];
+    let totalW = 0; // ОБЩИЙ ВЕС/КОЛ-ВО ДЛЯ СТРЕЙЧА
     document.querySelectorAll('.bulk-q').forEach(i=>{
         const q=parseFloat(i.value);
-        if(i.value>0) its.push({n:i.getAttribute('data-n'), w:q, c:i.getAttribute('data-cat')});
+        if(i.value>0) {
+            its.push({n:i.getAttribute('data-n'), w:q, c:i.getAttribute('data-cat')});
+            totalW += q;
+        }
     });
     if(!its.length)return alert('Введите кол-во');
     if(!confirm(`Отгрузить ${its.length} позиций для ${c}?`)) return;
@@ -1375,6 +1424,23 @@ async function sShip(){
         const updates={};
         updates['/ArchInvoices/'+lKey]={date:dV,client:c,num:nm,items:its.map(x=>x.n+"|"+x.w+"|"+(x.c==='Готовая'?'шт':'кг')),ts:new Date().toISOString()};
         its.forEach(i=>{ updates[`/${i.c}/${db.child(i.c).push().key}`] = {name:i.n,amount:-i.w,date:dV,note:`Отгр: ${c} №${nm}`,fLink:lKey,ts:new Date().toISOString()}; });
+        
+        // АВТОСПИСАНИЕ СТРЕЙЧА (ПО КНОПКЕ)
+        if (useStretch) {
+             const strQty = parseFloat((totalW * 0.000165).toFixed(3)); // ФОРМУЛА
+             if (strQty > 0) {
+                 const strKey = db.child('Стрейч пленка').push().key;
+                 updates['/Стрейч пленка/'+strKey] = {
+                     name: 'Стрейч пленка',
+                     amount: -strQty,
+                     date: dV,
+                     note: `(авто) Отгрузка ${c}`,
+                     fLink: lKey,
+                     ts: new Date().toISOString()
+                 };
+             }
+        }
+
         await db.update(updates);
         closeModal();
     } catch(e){ alert(e); btn.disabled=false; }
@@ -1390,7 +1456,6 @@ async function sInc(){
     const d=document.getElementById('iD').value+"T12:00:00Z";
     const l=db.child('ArchIncoming').push().key;
     const updates={};
-    // ДОБАВИЛ: type: 'GOODS', чтобы отличать от сырья
     updates['/ArchIncoming/'+l]={date:d,supplier:s,name:n,amount:a,num:num,ts:new Date().toISOString(), type: 'GOODS'};
     updates['/WeightStock/'+db.child('WeightStock').push().key]={name:n,amount:a,date:d,note:'Приход '+s + (num ? ' №'+num : ''),fLink:l,ts:new Date().toISOString()};
     await db.update(updates);
@@ -1399,23 +1464,12 @@ async function sInc(){
 
 async function sPack(){
     const sS = document.getElementById('s_pS'); const s = (sS.value==='NEW')?document.getElementById('i_pS').value:sS.value;
-    const sN = document.getElementById('s_pN'); // Это может быть select или undefined, если NEW_ENTRY
+    const sN = document.getElementById('s_pN'); 
     let n = '';
-    
-    // Проверка, что выбрано:
     const sel = document.getElementById('s_pN');
     const inp = document.getElementById('i_pN');
-    
-    if (sel && sel.style.display !== 'none') {
-        n = sel.value;
-    } else if (inp && inp.style.display !== 'none') {
-        n = inp.value;
-    }
-    
-    // Если makeSelect вернул NEW, берем из input
-    if (n === 'NEW' || n === 'NEW_ENTRY') {
-         n = inp.value;
-    }
+    if (sel && sel.style.display !== 'none') { n = sel.value; } else if (inp && inp.style.display !== 'none') { n = inp.value; }
+    if (n === 'NEW' || n === 'NEW_ENTRY') { n = inp.value; }
 
     const a=parseFloat(document.getElementById('pA').value);
     const num = document.getElementById('pNum').value;
@@ -1441,13 +1495,12 @@ async function sRawInc(){
     const a=parseFloat(document.getElementById('rA').value);
     if(!a)return;
     if(!confirm('Принять сырье?'))return;
-    const dInput = document.getElementById('rD').value; // БЕРЕМ ДАТУ ИЗ ПОЛЯ
+    const dInput = document.getElementById('rD').value; 
     const dV = dInput + "T12:00:00Z";
-    const ts = new Date().toISOString(); // А ЭТО ДЛЯ СОРТИРОВКИ
+    const ts = new Date().toISOString(); 
     const finalName = `${n} [${s}]`; 
     const l=db.child('ArchIncoming').push().key;
     const updates={};
-    // ДОБАВИЛ: type: 'RAW', чтобы поставщик не лез в покупки товаров
     updates['/ArchIncoming/'+l]={date:dV,supplier:s,name:n,amount:a,ts:ts, type: 'RAW'};
     updates['/Stock_Raw/'+db.child('Stock_Raw').push().key]={name:finalName,amount:a,date:dV,note:'Вх '+s,fLink:l,ts:ts};
     await db.update(updates);
@@ -1477,6 +1530,140 @@ async function renameItem(oldN, cat) {
     }
     await db.update(updates);
     closeModal();
+}
+
+function renderByTiles(c, rawD, type) {
+    const gr = {};
+    if(rawD) Object.entries(rawD).forEach(([id,v])=>{
+        if(!v.date) return;
+        const dObj = new Date(v.date);
+        const y = dObj.getFullYear(), m = dObj.getMonth(); 
+        if(!gr[y]) gr[y] = {};
+        if(!gr[y][m]) gr[y][m] = [];
+        gr[y][m].push({...v, id});
+    });
+
+    let h = '';
+    Object.keys(gr).sort((a,b)=>b-a).forEach(y => {
+        h+=`<div class="arch-y-grid"><div class="arch-tile-y" onclick="toggleF('y${y}${type}')">${y}</div></div><div id="y${y}${type}" class="arch-content">`;
+        h+=`<div class="arch-m-grid">`;
+        Object.keys(gr[y]).sort((a,b)=>b-a).forEach(m=>{ h+=`<div class="arch-tile-m" onclick="toggleF('m${y}${m}${type}')">${mths[m]}</div>`; });
+        h+=`</div>`; 
+        Object.keys(gr[y]).sort((a,b)=>b-a).forEach(m=>{
+             h+=`<div id="m${y}${m}${type}" class="arch-content" style="grid-column:1/-1;">`;
+             gr[y][m].sort((a,b)=>(b.date+b.ts).localeCompare(a.date+a.ts)).forEach(v => {
+                if(type==='FAS') {
+                    // ФАСОВКА - ЦВЕТА ИСПРАВЛЕНЫ
+                    let nameTitle = v.name ? v.name.toUpperCase() : "ФАСОВКА";
+                    if(v.outputItems && v.outputItems.length > 0) {
+                        nameTitle = (v.outputItems.length > 1) ? `ФАСОВКА` : v.outputItems[0].name.toUpperCase();
+                    }
+                    
+                    h+=`<div class="card" style="padding-top:5px;padding-bottom:5px"><button class="del-rep-btn" onclick="event.stopPropagation();delFasFull('${v.id}')">🗑️</button>
+                    <div style="text-align:center;font-weight:900;border-bottom:1px solid #000;margin-bottom:5px;padding-bottom:5px;font-size:14px;color:#000">${nameTitle} ${fd2(v.date)}</div>`;
+                    
+                    h+=`<div style="font-weight:700;font-size:12px;color:#000;margin-bottom:2px">сырьё:</div>`;
+                    if(v.items) {
+                        v.items.forEach(i => {
+                             let srcLbl = (i.source === 'WeightStock') ? '<span style="color:var(--s);font-size:9px;margin-left:2px">(пок)</span>' : '<span style="color:var(--p);font-size:9px;margin-left:2px">(ДВ)</span>';
+                             // Расход сырья - красный
+                             h+=`<div class="j-row" style="margin:0"><span class="j-dots">${i.name} ${srcLbl}</span><span class="j-val val-neg">-${i.amount}кг</span></div>`;
+                        });
+                    } else {
+                        h+=`<div class="j-row"><span class="j-dots">${v.rawItem}</span><span class="j-val val-neg">-${v.prihod}кг</span></div>`;
+                    }
+
+                    h+=`<div style="border-bottom:1px dashed #000;margin:5px 0"></div>`;
+
+                    h+=`<div style="font-weight:700;font-size:12px;color:#000;margin-bottom:2px">Выход:</div>`;
+                    if(v.outputItems) {
+                         v.outputItems.forEach(o => {
+                             // Приход продукции - синий
+                             h+=`<div class="j-row" style="margin:0"><span class="j-dots">${o.name}</span><span class="j-val val-pos">+${o.count}шт</span></div>`;
+                         });
+                    } else {
+                         h+=`<div class="j-row"><span class="j-dots">${v.name}</span><span class="j-val val-pos">+${v.vyhod}шт</span></div>`;
+                    }
+
+                    h+=`<div style="border-bottom:1px dashed #000;margin:5px 0"></div>`;
+
+                    let packList = [];
+                    if(v.outputItems) {
+                        v.outputItems.forEach(o => packList.push({n: `Пакеты ${o.size}`, v: Math.round(o.count / ((o.name==="Кутя")?19.8:9.9))}));
+                    } else {
+                        packList.push({n: `Пакеты ${v.size}`, v: Math.round(v.vyhod / ((v.name==="Кутя")?19.8:9.9))});
+                    }
+                    
+                    packList.forEach(p => {
+                        h+=`<div class="j-row" style="margin:0"><span class="j-dots">${p.n}</span><span class="j-val val-neg">-${p.v}шт</span></div>`;
+                    });
+                    
+                    let plVal = v.vzial ? Math.abs(v.vzial - (v.ostatok||0)).toFixed(2) : '0';
+                    let fNameDisp = (v.filmName) ? v.filmName : (v.outputItems && v.outputItems.length > 0 ? v.outputItems[0].name : 'Пленка');
+                    let finalFilmName = fNameDisp.toLowerCase().includes('пленка') ? fNameDisp : 'Пленка ' + fNameDisp;
+                    h+=`<div class="j-row" style="margin:0"><span class="j-dots">${finalFilmName}</span><span class="j-val val-neg">-${plVal}кг</span></div>`;
+                    h+=`<div class="j-row" style="margin:0"><span class="j-dots">Скотч</span><span class="j-val val-neg">-${v.scotch||0}шт</span></div>`;
+                    
+                    h+=`</div>`;
+                }
+                else if(type==='KRUP' || type==='VIBRO' || type==='ZSHM') {
+                    let ts = (v.timeStart||'??') + ' — ' + (v.timeEnd||'??');
+                    
+                    // РАСЧЕТ СПИСАНИЯ ДЛЯ ОТОБРАЖЕНИЯ
+                    let totalBags = 0;
+                    let labelsMap = {};
+                    if(v.items) {
+                        v.items.forEach(i => {
+                            totalBags += i.q;
+                            if (i.w === 25) {
+                                let nLow = i.n.toLowerCase();
+                                let labelName = null;
+                                if (!nLow.includes('арнаутка 3')) {
+                                    if (nLow.includes('арнаутка')) labelName = 'Эт-ка Арнаутка';
+                                    else if (nLow.includes('ячка')) labelName = 'Эт-ка Ячка';
+                                    else if (nLow.includes('пшеничка')) labelName = 'Эт-ка Пшеничка';
+                                    else if (nLow.includes('перловка')) labelName = 'Эт-ка Перловка';
+                                    else if (nLow.includes('горох')) labelName = 'Эт-ка Горох';
+                                    else if (nLow.includes('пшоно')) labelName = 'Эт-ка Пшоно';
+                                    else if (nLow.includes('кукуруза')) labelName = 'Эт-ка Кукуруза';
+                                }
+                                if (labelName) {
+                                    labelsMap[labelName] = (labelsMap[labelName] || 0) + i.q;
+                                }
+                            }
+                        });
+                    }
+                    
+                    let bagsHtml = totalBags > 0 ? `<div class="report-line"><span>Мешки</span><b class="val-neg">-${totalBags}шт</b></div>` : '';
+                    let labelsHtml = '';
+                    Object.keys(labelsMap).forEach(k => {
+                        labelsHtml += `<div class="report-line"><span>${k}</span><b class="val-neg">-${labelsMap[k]}шт</b></div>`;
+                    });
+
+                    h+=`<div class="card"><button class="del-rep-btn" onclick="event.stopPropagation();delWorkshopReportFull('${WS_CFG[type].db}', '${v.id}')">🗑️</button><b>${WS_CFG[type].title}</b> [${fd2(v.date)}]` + `<div style="font-size:11px;color:#333;margin-bottom:5px;font-weight:bold">🕑 ${ts}</div>` + `<div style="font-size:11px;color:#333;margin-bottom:5px">👤 ${v.operator||'-'} / ${v.assistant||'-'}</div>` + `<div style="font-size:11px;color:#64748b">${v.rawMix}</div><hr style="opacity:0.2">` + v.items.map(i=>{
+                        let rest = i.l ? ` <span style="color:#d97706;font-weight:bold">+ ${i.l}кг</span>` : '';
+                        return `<div class="report-line"><span>${i.n}</span><div style="text-align:right"><b class="val-pos">${i.q}м × ${i.w}кг</b>${rest}</div></div>`;
+                    }).join('') + bagsHtml + labelsHtml + `</div>`;
+                }
+             });
+             h+=`</div>`;
+        });
+        h+=`</div>`;
+    });
+    c.innerHTML = h || 'Нет записей';
+}
+
+function toggleStr(btn) {
+    useStretch = !useStretch;
+    if(useStretch) {
+        btn.style.background = 'var(--p)';
+        btn.style.color = '#fff';
+        btn.innerText = 'СТРЕЙЧ: ДА (АВТО)';
+    } else {
+        btn.style.background = '#f1f5f9';
+        btn.style.color = '#333';
+        btn.innerText = 'СТРЕЙЧ: НЕТ';
+    }
 }
 
 window.onload=renderHome;
