@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Склад v660 "Точный"</title>
+<title>Склад v663 "Финал"</title>
 <script>
     window.onerror = function(msg, url, line) {
         alert("ОШИБКА:\n" + msg + "\nСтрока: " + line + "\nПришлите скриншот!");
@@ -169,6 +169,7 @@ const db=firebase.database().ref('production'),auth=firebase.auth();
 let cur='Home',data={},aId=null,archSub='',corrMode=false,isLogged=false;
 let corrCtx = {}; 
 let useStretch = false;
+let shipBasket = {}; // КОРЗИНА ДЛЯ МУЛЬТИ-ОТГРУЗКИ (формат ключа: Имя_Категория)
 
 const stockCatsAll = ['Stock_DV', 'Stock_Semi', 'Stock_Feed', 'Stock_Raw', 'WeightStock', 'Готовая', 'Пакеты', 'Пленка', 'Скотч 360 грамм', 'Мешки', 'Нитки', 'Этикетка', 'Стрейч пленка', 'Термо лента'];
 
@@ -264,11 +265,10 @@ function setCat(c){
     if(c==='Home'){renderHome();return}
 
     if(c==='StockRoot'){
-        a.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px">
-            <button class="btn-main" style="background:var(--s);padding:10px 2px;font-size:10px" onclick="openModal('inc')">Приход</button>
-            <button class="btn-main" style="background:var(--d);padding:10px 2px;font-size:10px" onclick="openModal('ship')">Отгрузка</button>
-        </div>`;
+        // ПЕРЕНЕСЛИ КНОПКИ В СЕТКУ КАК ПЛИТКИ
         ct.innerHTML=`<div class="dash-grid">
+            <div class="dash-item" onclick="openModal('inc')" style="border:2px solid var(--s);color:var(--s)"><span>📥</span>ПРИХОД</div>
+            <div class="dash-item" onclick="openModal('ship')" style="border:2px solid var(--d);color:var(--d)"><span>🚚</span>ОТГРУЗКА</div>
             <div class="dash-item" onclick="setCat('StockList')">ФАСОВАНАЯ ПРОДУКЦИЯ</div>
             <div class="dash-item" onclick="setCat('WeightStock')">ПОКУПНАЯ ПРОДУКЦИЯ ВЕСОВАЯ</div>
             <div class="dash-item" onclick="setCat('Stock_DV')">СКЛАД ГОТОВОЙ ВЕСОВОЙ ПРОДУКЦИИ С ПРОИЗВОДСТВА</div>
@@ -326,9 +326,18 @@ function toggleInput(id){const sel=document.getElementById('s_'+id),inp=document
 function drawShipItem(str) {
     let p=str.split('|');
     if(p.length<2 && str.includes(':')){p=str.split(':')} 
-    let n=p[0], a=p[1], u=p[2];
+    let n=p[0], a=p[1], u=p[2], cat=p[3]; // cat - код склада (если есть)
+
+    let lbl = '';
+    if(cat === 'Готовая') lbl = '(фас)';
+    else if(cat === 'WeightStock') lbl = '(пок)';
+    else if(cat === 'Stock_DV') lbl = '(дв)';
+    else if(cat === 'Stock_Feed') lbl = '(корм)';
+    
+    let lblHtml = lbl ? `<span style="color:var(--blue);font-size:10px;margin-left:4px">${lbl}</span>` : '';
+
     if(!u) { u = bP.includes(n) ? 'шт' : 'кг'; }
-    return `<div class="j-row"><span class="j-dots">${n}</span><span class="j-val">${a}${u}</span></div>`;
+    return `<div class="j-row"><span class="j-dots">${n}${lblHtml}</span><span class="j-val">${a}${u}</span></div>`;
 }
 function rConsolidated(c) {
     const sumCat = (cats) => {
@@ -554,6 +563,7 @@ function rGen(c){
 
         if(cur === 'Скотч 360 грамм') { dispVal = val.toFixed(1); }
         if(cur === 'Пленка') { dispVal = val.toFixed(2); unit = 'кг'; }
+        if(cur === 'Стрейч пленка') { dispVal = val.toFixed(2); unit = 'шт'; }
 
         h+=`<div class="item-card ${alarm?'alarm-blink':''}"><div class="item-title">${k}</div><div class="item-qty ${val>=0?'val-pos':'val-neg'}">${dispVal} <small style="font-size:10px">${unit}</small></div><button class="history-btn" onclick="showH('${cur}','${k}')">📜</button><button class="corr-btn" onclick="openModal('corr','${cur}','${k}')">±</button></div>`;
     });
@@ -616,12 +626,14 @@ function renderHistRow(c, v, isTable=false) {
         </div>`;
     }
     const plusSign = v.a > 0 ? '+' : '';
+    let valDisp = (c === 'Стрейч пленка') ? v.a.toFixed(2) : (c === 'Пакеты' || c === 'Термо лента' ? Math.round(v.a) : v.a.toFixed(1));
+
     const html = `<div style="padding:8px 0;width:60%">
             <div style="font-weight:600;color:#1e293b;font-size:13px">${v.n}</div>
             <div style="font-size:10px;color:#94a3b8">${fd2(v.d)}</div>
         </div>
         <div style="text-align:right;font-weight:800;font-size:14px;width:30%" class="${v.a >= 0 ? 'hist-pos' : 'hist-neg'}">
-            ${plusSign}${c === 'Пакеты' || c === 'Стрейч пленка' || c === 'Термо лента' ? Math.round(v.a) : v.a.toFixed(1)}
+            ${plusSign}${valDisp}
         </div>
         <div style="width:30px;text-align:center">
             ${corrMode ? `<button onclick="delRec('${c}','${v.id}')" style="border:none;background:none;font-size:16px;color:red">🗑️</button>` : ''}
@@ -885,8 +897,9 @@ function openModal(t, a1, a2){
     }
     else if(t==='ship'){
         useStretch = false; // СБРОС СТРЕЙЧА ПРИ ОТКРЫТИИ
+        shipBasket = {}; // Очищаем корзину при новом открытии
         ti.innerText='ОТГРУЗКА СО СКЛАДА';
-        b.innerHTML=`<div class="grid" style="grid-template-columns:2fr 1fr"><div class="col"><label class="lt">ДАТА</label><input type="date" id="hD" value="${td}"></div><div class="col"><label class="lt">№ НАКЛ</label><input type="text" id="hNum" placeholder="№"></div></div><div style="margin:5px 0"><label class="lt">КЛИЕНТ</label>${makeSelect('hC', 'ArchInvoices', 'Клиент', gCl(), '+ НОВЫЙ')}</div><div class="z-head">ОТКУДА ГРУЗИМ:</div><div class="dash-grid" style="margin-bottom:10px;grid-template-columns:1fr 1fr"><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Готовая')">ФАСОВКА</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('WeightStock')">ПОКУПНАЯ</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Stock_DV')">ДВ</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Stock_Feed')">КОРМА</button></div><div id="shpR"></div>
+        b.innerHTML=`<div class="grid" style="grid-template-columns:2fr 1fr"><div class="col"><label class="lt">ДАТА</label><input type="date" id="hD" value="${td}"></div><div class="col"><label class="lt">№ НАКЛ</label><input type="text" id="hNum" placeholder="№"></div></div><div style="margin:5px 0"><label class="lt">КЛИЕНТ</label>${makeSelect('hC', 'ArchInvoices', 'Клиент', gCl(), '+ НОВЫЙ')}</div><div class="z-head">ОТКУДА ГРУЗИМ:</div><div id="shipBtns" class="dash-grid" style="margin-bottom:10px;grid-template-columns:1fr 1fr"><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Готовая')">ФАСОВКА</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('WeightStock')">ПОКУПНАЯ</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Stock_DV')">ДВ</button><button class="btn-main" style="background:#fff;color:#333;border:1px solid #ccc;padding:8px" onclick="loadBulk('Stock_Feed')">КОРМА</button></div><div id="shpR"></div>
         <div style="margin-top:10px;border-top:1px dashed #cbd5e1;padding-top:10px">
             <button id="btnStr" class="btn-main" onclick="toggleStr(this)" style="background:#f1f5f9;color:#333;border:1px solid #cbd5e1">СТРЕЙЧ: НЕТ</button>
         </div>
@@ -1410,12 +1423,44 @@ async function sFas() {
 }
 
 function loadBulk(cat){
+    // 1. Сохраняем то, что уже введено на текущем экране перед переключением
+    // ИСПОЛЬЗУЕМ УНИКАЛЬНЫЙ КЛЮЧ: Имя_Категория
+    document.querySelectorAll('.bulk-q').forEach(i=>{
+        const n=i.getAttribute('data-n');
+        const c=i.getAttribute('data-cat');
+        const v=parseFloat(i.value);
+        const uniqueKey = n + '::' + c; // Уникальный ключ
+        if(v>0) shipBasket[uniqueKey] = {w:v, c:c, n:n};
+        else delete shipBasket[uniqueKey]; // Если стерли цифру, удаляем из памяти
+    });
+
+    // 2. Подсветка кнопок (Визуализация)
+    const btns = document.querySelectorAll('#shipBtns button');
+    btns.forEach(b => {
+        let txt = b.innerText;
+        let active = false;
+        if(cat==='Готовая' && txt.includes('ФАСОВКА')) active=true;
+        if(cat==='WeightStock' && txt.includes('ПОКУПНАЯ')) active=true;
+        if(cat==='Stock_DV' && txt.includes('ДВ')) active=true;
+        if(cat==='Stock_Feed' && txt.includes('КОРМА')) active=true;
+        
+        if(active) { b.style.background='#eef2ff'; b.style.borderColor='var(--p)'; }
+        else { b.style.background='#fff'; b.style.borderColor='#ccc'; }
+    });
+
+    // 3. Сбор данных для отображения
     const stock={}; 
     Object.values(data[cat]||{}).forEach(v=>{if(v)stock[v.name]=(stock[v.name]||0)+v.amount});
+    
     let h=`<div class="item-grid" style="grid-template-columns:repeat(3,1fr)">`;
     Object.keys(stock).sort().forEach(n=>{
         const v=stock[n];
-        if(v>0) h+=`<div class="item-card" style="padding:5px"><div class="item-title" style="height:20px">${n}</div><div style="font-size:10px;color:#888;margin-bottom:2px">Ост: ${Math.round(v)}</div><input type="number" class="bulk-q" data-n="${n}" data-cat="${cat}" placeholder="0" style="width:100%"></div>`;
+        if(v>0) {
+            // Ищем в корзине по уникальному ключу
+            const uniqueKey = n + '::' + cat;
+            const savedVal = shipBasket[uniqueKey] ? shipBasket[uniqueKey].w : '';
+            h+=`<div class="item-card" style="padding:5px"><div class="item-title" style="height:20px">${n}</div><div style="font-size:10px;color:#888;margin-bottom:2px">Ост: ${Math.round(v)}</div><input type="number" class="bulk-q" data-n="${n}" data-cat="${cat}" placeholder="0" style="width:100%" value="${savedVal}"></div>`;
+        }
     });
     document.getElementById('shpR').innerHTML=h+`</div>`;
 }
@@ -1426,28 +1471,45 @@ async function sShip(){
     const nm=document.getElementById('hNum').value;
     const d=document.getElementById('hD').value;
     const dV=d+"T12:00:00Z";
+    
     if(!c) return alert('Выберите клиента');
-    const its=[];
-    let totalW = 0; // ОБЩИЙ ВЕС/КОЛ-ВО ДЛЯ СТРЕЙЧА
+
+    // 1. Сохраняем данные с текущего открытого экрана
     document.querySelectorAll('.bulk-q').forEach(i=>{
-        const q=parseFloat(i.value);
-        if(i.value>0) {
-            its.push({n:i.getAttribute('data-n'), w:q, c:i.getAttribute('data-cat')});
-            totalW += q;
-        }
+        const n=i.getAttribute('data-n');
+        const cat=i.getAttribute('data-cat');
+        const v=parseFloat(i.value);
+        const uniqueKey = n + '::' + cat;
+        if(v>0) shipBasket[uniqueKey] = {w:v, c:cat, n:n};
+        else delete shipBasket[uniqueKey];
     });
-    if(!its.length)return alert('Введите кол-во');
+
+    // 2. Формируем список из корзины (перебираем значения, ключи нам не важны)
+    const its=[];
+    let totalW = 0;
+    Object.values(shipBasket).forEach(val => {
+        its.push({n: val.n, w: val.w, c: val.c});
+        totalW += val.w;
+    });
+
+    if(!its.length) return alert('Список пуст. Введите количество.');
     if(!confirm(`Отгрузить ${its.length} позиций для ${c}?`)) return;
+    
     const btn = document.getElementById('btnS'); btn.disabled=true;
     try {
         const lKey=db.child('ArchInvoices').push().key;
         const updates={};
-        updates['/ArchInvoices/'+lKey]={date:dV,client:c,num:nm,items:its.map(x=>x.n+"|"+x.w+"|"+(x.c==='Готовая'?'шт':'кг')),ts:new Date().toISOString()};
-        its.forEach(i=>{ updates[`/${i.c}/${db.child(i.c).push().key}`] = {name:i.n,amount:-i.w,date:dV,note:`Отгр: ${c} №${nm}`,fLink:lKey,ts:new Date().toISOString()}; });
         
-        // АВТОСПИСАНИЕ СТРЕЙЧА (ПО КНОПКЕ)
+        // ДОБАВЛЯЕМ КОД СКЛАДА (x.c) В СТРОКУ СОХРАНЕНИЯ
+        updates['/ArchInvoices/'+lKey]={date:dV,client:c,num:nm,items:its.map(x=>x.n+"|"+x.w+"|"+(x.c==='Готовая'?'шт':'кг')+"|"+x.c),ts:new Date().toISOString()};
+        
+        its.forEach(i=>{ 
+            updates[`/${i.c}/${db.child(i.c).push().key}`] = {name:i.n,amount:-i.w,date:dV,note:`Отгр: ${c} №${nm}`,fLink:lKey,ts:new Date().toISOString()}; 
+        });
+        
+        // АВТОСПИСАНИЕ СТРЕЙЧА (2 ЗНАКА ПОСЛЕ ЗАПЯТОЙ)
         if (useStretch) {
-             const strQty = parseFloat((totalW * 0.000165).toFixed(1)); // ФОРМУЛА
+             const strQty = parseFloat((totalW * 0.000165).toFixed(2));
              if (strQty > 0) {
                  const strKey = db.child('Стрейч пленка').push().key;
                  updates['/Стрейч пленка/'+strKey] = {
