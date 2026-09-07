@@ -3306,7 +3306,8 @@ function genDayReport(){
     const d=gID('repDate').value;
     if(!d)return;
     const ds=d.split('-').reverse().join('.');
-    const rOutFas={},rOutVes={},rOutFeed={},rInc={},rToProd={},rFromProd={},rAuto={},rPai={},rZp={},rShiftPay={};
+    
+    const rOutFas={},rOutVes={},rOutFeed={},rInc={},rToProd={},rFromProd={},rAuto={},rPai={},rZp={},rShiftPay={},rSales={};
     
     const addV=(obj,key,val,unit,name='',src='',dest='')=>{
         if(!obj[key])obj[key]={v:0,u:unit,n:name||key,src,dest};
@@ -3317,11 +3318,24 @@ function genDayReport(){
     
     if(data.ArchIncoming)Object.values(data.ArchIncoming).forEach(v=>{
         if(v.date&&v.date.startsWith(d)){
-            if(v.items)v.items.forEach(it=>addV(rInc,it.n,it.a,'кг',it.n));
-            else if(v.name)addV(rInc,v.name,v.amount,'кг',v.name);
+            let sup = v.supplier || '';
+            if(v.items)v.items.forEach(it=>{
+                addV(rInc,it.n,it.a,'кг',it.n);
+                if(!rInc[it.n].info) rInc[it.n].info = [];
+                let pr = it.p ? it.p + ' грн' : '';
+                let txt = [sup, pr].filter(Boolean).join(' | ');
+                if(txt && !rInc[it.n].info.includes(txt)) rInc[it.n].info.push(txt);
+            });
+            else if(v.name){
+                addV(rInc,v.name,v.amount,'кг',v.name);
+                if(!rInc[v.name].info) rInc[v.name].info = [];
+                let pr = v.price ? v.price + ' грн' : '';
+                let txt = [sup, pr].filter(Boolean).join(' | ');
+                if(txt && !rInc[v.name].info.includes(txt)) rInc[v.name].info.push(txt);
+            }
         }
     });
-    
+
     if(data.ArchPackIn)Object.values(data.ArchPackIn).forEach(v=>{
         if(v.date&&v.date.startsWith(d)){
             if(v.items){
@@ -3386,13 +3400,29 @@ function genDayReport(){
         });
     }
 
+    if(data.ArchInvoices){
+        Object.values(data.ArchInvoices).forEach(v=>{
+            if(v.date && v.date.startsWith(d)){
+                let client = v.client || 'Неизвестный клиент';
+                let total = parseFloat(v.totalSum) || 0;
+                if(total > 0){
+                    if(!rSales[client]) rSales[client] = 0;
+                    rSales[client] += total;
+                }
+            }
+        });
+    }
+
     const fmt=(x)=>{
         let r=`<div class="dr-row"><div class="dr-left" style="width:100%; display:flex; justify-content:space-between; align-items:center;"><span class="dr-name">${esc(x.n)}</span><span class="dr-qty">${x.v%1===0?x.v:x.v.toFixed(2)}${x.u}</span></div>`;
+        if(x.info && x.info.length > 0){
+            r+=`<div style="width:100%; font-size:10px; color:#059669; margin-top:-2px;">${esc(x.info.join(', '))}</div>`;
+        }
         if(x.src&&x.dest&&x.dest!=='Авто'&&x.dest!=='Фас'&&!x.dest.startsWith('(авто)'))r+=`<div class="dr-hint" style="width:100%; text-align:right; margin-top:-2px; font-size:10px; color:#64748b;">(${x.src} -> ${x.dest})</div>`;
         r+=`</div>`;
         return r;
     };
-    
+
     const renderList=(obj)=>{
         let vals=Object.values(obj).sort((a,b)=>(a.n||'').localeCompare(b.n||''));
         if(!vals.length)return '<div style="color:#94a3b8; font-size:11px;">-</div>';
@@ -3417,9 +3447,23 @@ function genDayReport(){
         blockZp=renderList(rZp),
         blockShiftPay=renderList(rShiftPay);
 
-    let screenHtml=`<div style="font-weight:900;text-align:center;font-size:16px;margin-bottom:15px;color:var(--p)">ДНЕВНОЙ ОТЧЕТ ${ds}</div><div class="dr-card"><div class="dr-sec">ОТГРУЗКИ СО СКЛАДА:</div><div class="dr-sub">- фасованная продукция</div><div style="margin-bottom:8px;">${blockOutFas}</div><div class="dr-sub">- весовая продукция</div><div style="margin-bottom:8px;">${blockOutVes}</div><div class="dr-sub">- отходы</div><div>${blockOutFeed}</div></div><div class="dr-card"><div class="dr-sec">ПРИХОД НА СКЛАД:</div><div>${blockInc}</div></div><div class="dr-card"><div class="dr-sec">УШЛО В ПЕРЕРАБОТКУ:</div><div>${blockToProd}</div></div><div class="dr-card"><div class="dr-sec">ПАЙКИ:</div><div style="margin-bottom:15px;">${blockPai}</div></div><div class="dr-card"><div class="dr-sec">ТОВАРЫ В СЧЕТ ЗП:</div><div style="margin-bottom:15px;">${blockZp}</div></div><div class="dr-card"><div class="dr-sec" style="color:#059669">НАЧИСЛЕНА ЗАРПЛАТА ЗА СМЕНУ:</div><div style="margin-bottom:15px;">${blockShiftPay}</div></div><div class="dr-card"><div class="dr-sec">ПРИХОД НА СКЛАД С ПРОИЗВОДСТВА:</div><div>${blockFromProd}</div></div><div class="dr-card"><div class="dr-sec">АВТОСПИСАНИЕ УПАКОВКИ:</div><div>${blockAuto}</div></div>`;
+    let blockSales = '';
+    let totalSalesDay = 0;
+    Object.keys(rSales).sort().forEach(client => {
+        let val = rSales[client];
+        totalSalesDay += val;
+        blockSales += `<div class="dr-row"><div class="dr-left" style="width:100%; display:flex; justify-content:space-between; align-items:center;"><span class="dr-name">${esc(client)}</span><span class="dr-qty">${val.toFixed(2)} грн</span></div></div>`;
+    });
+    let scrSales = '', prtSales = '';
+    if (blockSales) {
+        blockSales += `<div class="dr-row" style="border-top:1px solid #cbd5e1; margin-top:5px; padding-top:2px;"><div class="dr-left" style="width:100%; display:flex; justify-content:space-between; align-items:center;"><span class="dr-name" style="font-weight:900;">ИТОГО:</span><span class="dr-qty" style="font-weight:900;">${totalSalesDay.toFixed(2)} грн</span></div></div>`;
+        scrSales = `<div class="dr-card"><div class="dr-sec">СУММЫ ПО КЛИЕНТАМ:</div><div style="margin-bottom:15px;">${blockSales}</div></div>`;
+        prtSales = `<div class="dr-sec" style="margin-top:15px;">СУММЫ ПО КЛИЕНТАМ:</div><div style="margin-bottom:15px;">${blockSales}</div>`;
+    }
+
+    let screenHtml=`<div style="font-weight:900;text-align:center;font-size:16px;margin-bottom:15px;color:var(--p)">ДНЕВНОЙ ОТЧЕТ ${ds}</div><div class="dr-card"><div class="dr-sec">ОТГРУЗКИ СО СКЛАДА:</div><div class="dr-sub">- фасованная продукция</div><div style="margin-bottom:8px;">${blockOutFas}</div><div class="dr-sub">- весовая продукция</div><div style="margin-bottom:8px;">${blockOutVes}</div><div class="dr-sub">- отходы</div><div>${blockOutFeed}</div></div>${scrSales}<div class="dr-card"><div class="dr-sec">ПРИХОД НА СКЛАД:</div><div>${blockInc}</div></div><div class="dr-card"><div class="dr-sec">УШЛО В ПЕРЕРАБОТКУ:</div><div>${blockToProd}</div></div><div class="dr-card"><div class="dr-sec">ПАЙКИ:</div><div style="margin-bottom:15px;">${blockPai}</div></div><div class="dr-card"><div class="dr-sec">ТОВАРЫ В СЧЕТ ЗП:</div><div style="margin-bottom:15px;">${blockZp}</div></div><div class="dr-card"><div class="dr-sec" style="color:#059669">НАЧИСЛЕНА ЗАРПЛАТА ЗА СМЕНУ:</div><div style="margin-bottom:15px;">${blockShiftPay}</div></div><div class="dr-card"><div class="dr-sec">ПРИХОД НА СКЛАД С ПРОИЗВОДСТВА:</div><div>${blockFromProd}</div></div><div class="dr-card"><div class="dr-sec">АВТОСПИСАНИЕ УПАКОВКИ:</div><div>${blockAuto}</div></div>`;
     
-    let printHtml=`<div style="font-weight:900;text-align:center;font-size:16px;margin-bottom:15px;color:#000;">ДНЕВНОЙ ОТЧЕТ ${ds}</div><div class="dr-print-wrap"><div class="dr-print-col"><div class="dr-sec">ОТГРУЗКИ СО СКЛАДА:</div><div class="dr-sub" style="margin-bottom:4px; font-weight:bold;">- фасованная продукция</div><div style="margin-bottom:8px;">${blockOutFas}</div><div class="dr-sub" style="margin-bottom:4px; font-weight:bold;">- весовая продукция</div><div style="margin-bottom:8px;">${blockOutVes}</div><div class="dr-sub" style="margin-bottom:4px; font-weight:bold;">- отходы</div><div style="margin-bottom:15px;">${blockOutFeed}</div><div class="dr-sec">ПРИХОД НА СКЛАД:</div><div>${blockInc}</div></div><div class="dr-print-col"><div class="dr-sec">УШЛО В ПЕРЕРАБОТКУ:</div><div style="margin-bottom:15px;">${blockToProd}</div><div class="dr-sec">ПАЙКИ:</div><div style="margin-bottom:15px;">${blockPai}</div><div class="dr-sec">ТОВАРЫ В СЧЕТ ЗП:</div><div style="margin-bottom:15px;">${blockZp}</div><div class="dr-sec">НАЧИСЛЕНА ЗАРПЛАТА ЗА СМЕНУ:</div><div style="margin-bottom:15px;">${blockShiftPay}</div><div class="dr-sec">ПРИХОД НА СКЛАД С ПРОИЗВОДСТВА:</div><div style="margin-bottom:15px;">${blockFromProd}</div><div class="dr-sec">АВТОСПИСАНИЕ УПАКОВКИ:</div><div>${blockAuto}</div></div></div>`;
+    let printHtml=`<div style="font-weight:900;text-align:center;font-size:16px;margin-bottom:15px;color:#000;">ДНЕВНОЙ ОТЧЕТ ${ds}</div><div class="dr-print-wrap"><div class="dr-print-col"><div class="dr-sec">ОТГРУЗКИ СО СКЛАДА:</div><div class="dr-sub" style="margin-bottom:4px; font-weight:bold;">- фасованная продукция</div><div style="margin-bottom:8px;">${blockOutFas}</div><div class="dr-sub" style="margin-bottom:4px; font-weight:bold;">- весовая продукция</div><div style="margin-bottom:8px;">${blockOutVes}</div><div class="dr-sub" style="margin-bottom:4px; font-weight:bold;">- отходы</div><div style="margin-bottom:15px;">${blockOutFeed}</div>${prtSales}<div class="dr-sec">ПРИХОД НА СКЛАД:</div><div>${blockInc}</div></div><div class="dr-print-col"><div class="dr-sec">УШЛО В ПЕРЕРАБОТКУ:</div><div style="margin-bottom:15px;">${blockToProd}</div><div class="dr-sec">ПАЙКИ:</div><div style="margin-bottom:15px;">${blockPai}</div><div class="dr-sec">ТОВАРЫ В СЧЕТ ЗП:</div><div style="margin-bottom:15px;">${blockZp}</div><div class="dr-sec">НАЧИСЛЕНА ЗАРПЛАТА ЗА СМЕНУ:</div><div style="margin-bottom:15px;">${blockShiftPay}</div><div class="dr-sec">ПРИХОД НА СКЛАД С ПРОИЗВОДСТВА:</div><div style="margin-bottom:15px;">${blockFromProd}</div><div class="dr-sec">АВТОСПИСАНИЕ УПАКОВКИ:</div><div>${blockAuto}</div></div></div>`;
     
     gID('print-view').innerHTML=printHtml;
     gID('mB').innerHTML=screenHtml+`<button class="btn-main" onclick="window.print()" style="margin-top:15px;background:#0f172a">🖨️ ПЕЧАТЬ</button>`;
